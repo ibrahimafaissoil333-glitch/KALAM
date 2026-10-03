@@ -1,0 +1,358 @@
+// Folio — modèle de données (voir docs/03-conception-technique.md §3)
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum EbookStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FileKind {
+  COVER
+  MAIN
+  CONTENT // chapitres extraits (JSON) pour le lecteur
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  CREATED
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String?           @unique
+  name             String
+  passwordHash     String?
+  role             Role              @default(CUSTOMER)
+  status           UserStatus        @default(ACTIVE)
+  marketingConsent Boolean           @default(false)
+  marketingConsentAt DateTime?
+  termsAcceptedAt  DateTime?
+  failedLogins     Int               @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  refreshTokens    RefreshToken[]
+  passwordResets   PasswordReset[]
+  devices          Device[]
+  cart             Cart?
+  orders           Order[]
+  entitlements     Entitlement[]
+  progress         ReadingProgress[]
+  downloads        DownloadEvent[]
+  notificationPref NotificationPref?
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  familyId   String
+  deviceId   String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  replacedBy String?
+  createdAt  DateTime  @default(now())
+
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("password_resets")
+}
+
+model Device {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceKey  String
+  label      String
+  platform   String
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, deviceKey])
+  @@map("devices")
+}
+
+model Category {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  slug   String  @unique
+  order  Int     @default(0)
+  ebooks Ebook[]
+
+  @@map("categories")
+}
+
+model Ebook {
+  id              String        @id @default(uuid())
+  slug            String        @unique
+  title           String
+  author          String
+  description     String        @default("")
+  categoryId      String?
+  category        Category?     @relation(fields: [categoryId], references: [id])
+  priceCents      Int?
+  currency        String        @default("EUR")
+  format          String?
+  pages           Int?
+  status          EbookStatus   @default(DRAFT)
+  downloadAllowed Boolean       @default(false)
+  previewBlocks   Int           @default(12)
+  featured        Boolean       @default(false)
+  coverBg         String        @default("#14151F")
+  coverFg         String        @default("#D7F25C")
+  coverTint       String        @default("#ECEBE6")
+  searchText      String        @default("")
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  files           File[]
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
+  entitlements    Entitlement[]
+  progress        ReadingProgress[]
+  downloads       DownloadEvent[]
+  views           EbookView[]
+
+  @@index([status, publishedAt])
+  @@map("ebooks")
+}
+
+model File {
+  id          String   @id @default(uuid())
+  ebookId     String
+  ebook       Ebook    @relation(fields: [ebookId], references: [id], onDelete: Cascade)
+  kind        FileKind
+  storageKey  String   @unique
+  mimeType    String
+  sizeBytes   Int
+  originalName String  @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([ebookId, kind])
+  @@map("files")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  cartId  String
+  cart    Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  ebookId String
+  ebook   Ebook    @relation(fields: [ebookId], references: [id], onDelete: Cascade)
+  addedAt DateTime @default(now())
+
+  @@id([cartId, ebookId])
+  @@map("cart_items")
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  reference      String        @unique
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  status         OrderStatus   @default(PENDING)
+  totalCents     Int
+  currency       String
+  taxCents       Int?
+  taxCountry     String?
+  idempotencyKey String?
+  platform       String?
+  paidAt         DateTime?
+  failedAt       DateTime?
+  refundedAt     DateTime?
+  canceledAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  items          OrderItem[]
+  payments       Payment[]
+  entitlements   Entitlement[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String @id @default(uuid())
+  orderId    String
+  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ebookId    String
+  ebook      Ebook  @relation(fields: [ebookId], references: [id])
+  title      String
+  priceCents Int
+
+  @@unique([orderId, ebookId])
+  @@map("order_items")
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  orderId           String
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider          String
+  providerSessionId String        @unique
+  providerPaymentId String?
+  status            PaymentStatus @default(CREATED)
+  amountCents       Int
+  currency          String
+  failureReason     String?
+  returnUrl         String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+model PaymentEvent {
+  id              String   @id @default(uuid())
+  provider        String
+  providerEventId String
+  type            String
+  orderId         String?
+  outcome         String
+  receivedAt      DateTime @default(now())
+
+  @@unique([provider, providerEventId])
+  @@map("payment_events")
+}
+
+model Entitlement {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  ebookId   String
+  ebook     Ebook     @relation(fields: [ebookId], references: [id])
+  orderId   String?
+  order     Order?    @relation(fields: [orderId], references: [id])
+  grantedAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  @@unique([userId, ebookId])
+  @@map("entitlements")
+}
+
+model DownloadEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ebookId   String
+  ebook     Ebook    @relation(fields: [ebookId], references: [id])
+  kind      String // "read" | "download"
+  deviceId  String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, ebookId, kind])
+  @@map("download_events")
+}
+
+model ReadingProgress {
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ebookId      String
+  ebook        Ebook    @relation(fields: [ebookId], references: [id], onDelete: Cascade)
+  chapterIndex Int      @default(0)
+  blockIndex   Int      @default(0)
+  percent      Int      @default(0)
+  updatedAt    DateTime @default(now())
+
+  @@id([userId, ebookId])
+  @@map("reading_progress")
+}
+
+model NotificationPref {
+  userId         String  @id
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ebookUpdates   Boolean @default(true)
+  marketing      Boolean @default(false)
+
+  @@map("notification_prefs")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  targetType String?
+  targetId   String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model EbookView {
+  id        String   @id @default(uuid())
+  ebookId   String
+  ebook     Ebook    @relation(fields: [ebookId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([ebookId, createdAt])
+  @@map("ebook_views")
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

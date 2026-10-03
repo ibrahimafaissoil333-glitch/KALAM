@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: folio
+          POSTGRES_PASSWORD: folio
+          POSTGRES_DB: folio_test
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - run: npm ci
+      - name: Fichier .env.test
+        run: |
+          cat > .env.test <<'ENV'
+          NODE_ENV=test
+          DATABASE_URL=postgresql://folio:folio@localhost:5432/folio_test
+          JWT_ACCESS_SECRET=ci-access-secret-0123456789abcdef0123
+          STORAGE_SIGNING_SECRET=ci-storage-secret-0123456789abcdef01
+          STORAGE_LOCAL_DIR=./storage-test
+          PAYMENT_PROVIDER=fake
+          FAKE_WEBHOOK_SECRET=ci-fake-webhook-secret
+          PUBLIC_API_URL=http://localhost:3000
+          MAIL_DRIVER=memory
+          THROTTLE_GLOBAL_PER_MINUTE=100000
+          THROTTLE_AUTH_PER_MINUTE=100000
+          ENV
+      - run: npx prisma generate
+      - run: npm test
+
+  admin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx expo-doctor

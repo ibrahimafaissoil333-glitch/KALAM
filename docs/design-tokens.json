@@ -1,0 +1,69 @@
+{
+  "$schema": "folio-design-tokens/v1",
+  "color": {
+    "ink": { "value": "#14151F", "role": "Texte principal, bouton principal, fonds sombres" },
+    "inkHover": { "value": "#2B2D3A" },
+    "indigo": { "value": "#3B36E0", "role": "Achat, liens, onglet actif, focus" },
+    "indigoHover": { "value": "#2A25B8" },
+    "indigoSoft": { "value": "#ECEBFF", "role": "Fond des puces de catégorie et des icônes d'état" },
+    "indigoText": { "value": "#2E29B8", "role": "Texte sur indigoSoft" },
+    "focusRing": { "value": "#E3E2FF" },
+    "lime": { "value": "#D7F25C", "role": "Accent, uniquement sur fond encre" },
+    "paper": { "value": "#FAFAF7", "role": "Fond des écrans" },
+    "surface": { "value": "#FFFFFF", "role": "Cartes, champs, barre d'onglets" },
+    "textMuted": { "value": "#5C5E6B", "role": "Texte secondaire (contraste 6,4:1 sur paper)" },
+    "placeholder": { "value": "#76788A" },
+    "border": { "value": "#E6E5E0" },
+    "borderStrong": { "value": "#DAD9D3" },
+    "borderControl": { "value": "#E3E2DC" },
+    "divider": { "value": "#ECEBE6" },
+    "success": { "value": "#1E7A4C" },
+    "successSoft": { "value": "#E2F3E9" },
+    "successText": { "value": "#1B6340" },
+    "warningSoft": { "value": "#FFF0D2" },
+    "warningText": { "value": "#7A4E00" },
+    "danger": { "value": "#B4232C" },
+    "dangerSoft": { "value": "#FBE4E5" },
+    "dangerText": { "value": "#9E1F27" },
+    "neutralSoft": { "value": "#ECECEF" },
+    "neutralText": { "value": "#3D3E48" },
+    "readerPaper": { "value": "#F6F1E6" },
+    "readerText": { "value": "#22201A" },
+    "readerMuted": { "value": "#5F5A4C" },
+    "readerBorder": { "value": "#E2DCCB" }
+  },
+  "font": {
+    "serif": { "value": "Instrument Serif", "fallback": "Georgia, serif", "use": "Titres, couvertures, texte de lecture" },
+    "sans": { "value": "Hanken Grotesk", "fallback": "system-ui, sans-serif", "use": "Interface" },
+    "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700 }
+  },
+  "fontSize": {
+    "caption": 11, "xs": 12, "sm": 13, "body2": 14, "body": 15, "bodyLg": 16, "title": 17,
+    "h3": 22, "h2": 28, "h2Lg": 30, "h1": 38, "display": 40
+  },
+  "space": { "1": 4, "2": 8, "3": 12, "4": 16, "5": 20, "6": 24, "7": 28, "8": 32, "10": 40, "14": 56 },
+  "radius": { "sm": 4, "chipTag": 999, "control": 12, "button": 14, "card": 18, "hero": 24, "iconTile": 28 },
+  "size": {
+    "button": 52, "buttonSm": 44, "touchMin": 44, "iconButton": 44, "chip": 40, "input": 52, "tabItem": 54,
+    "coverRatio": "2:3"
+  },
+  "shadow": {
+    "cover": "inset 5px 0 0 rgba(0,0,0,.16), 0 10px 22px -10px rgba(20,21,31,.55)",
+    "toast": "0 14px 30px -10px rgba(20,21,31,.6)"
+  },
+  "motion": { "screenIn": "220ms ease-out", "toastIn": "250ms ease-out", "toastDuration": 2200 },
+  "components": {
+    "Button": { "variants": ["primary(ink)", "accent(indigo)", "ghost", "lime(on ink)"], "sizes": ["md(52)", "sm(44)"], "states": ["default", "pressed", "disabled", "loading"] },
+    "IconButton": { "size": 44, "states": ["default", "pressed", "disabled"] },
+    "Chip": { "variants": ["default", "selected"], "a11y": "aria-pressed / accessibilityState.selected" },
+    "Tag": { "variants": ["category(indigoSoft)", "new(lime)"] },
+    "StatusPill": { "variants": { "PAID": "Confirmée · success", "PENDING": "En attente · warning", "FAILED": "Échouée · danger", "REFUNDED": "Remboursée · neutral", "CANCELED": "Annulée · neutral", "DRAFT": "Brouillon · warning", "PUBLISHED": "Publié · success", "ARCHIVED": "Archivé · neutral" } },
+    "TextField": { "states": ["default", "focus", "error", "disabled"], "options": ["password with eye toggle", "helper", "rule checklist"] },
+    "Cover": { "fallback": "Couverture générée : fond + auteur + cercle + titre en serif", "ratio": "2:3" },
+    "TabBar": { "items": ["Accueil", "Catalogue", "Bibliothèque", "Panier (badge)", "Compte"] },
+    "StepBar": { "steps": ["Panier", "Paiement", "Confirmation"] },
+    "EmptyState": { "parts": ["icône 96px", "titre serif", "texte", "action"] },
+    "Skeleton": { "color": "#ECEBE6", "animation": "pulse 1.2s" },
+    "Toast": { "position": "bas, au-dessus de la barre d'onglets", "role": "status" }
+  }
+}
