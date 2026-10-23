@@ -7,7 +7,7 @@ const sans = Hanken_Grotesk({ subsets: ['latin', 'latin-ext'], weight: ['400', '
 const serif = Instrument_Serif({ subsets: ['latin', 'latin-ext'], weight: '400', variable: '--font-serif' });
 
 export const metadata: Metadata = {
-  title: { default: 'Folio — Administration', template: '%s · Folio admin' },
+  title: { default: 'Kalam — Administration', template: '%s · Kalam admin' },
   robots: { index: false, follow: false },
 };
 

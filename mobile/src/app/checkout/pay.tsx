@@ -188,7 +188,7 @@ export default function PayScreen() {
                     <T style={{ fontSize: 14, color: color.dangerText }}>« {e.title} » ne peut pas être livré à cette adresse.</T>
                   ) : (
                     <Choice
-                      label={`${e.title} · vendu par ${e.seller?.name ?? 'Folio'}`}
+                      label={`${e.title} · vendu par ${e.seller?.name ?? 'Kalam'}`}
                       value={shipping[e.id]}
                       options={opts.map((s) => [s.id, `${SHIPPING_LABEL[s.mode]} · ${s.priceCents ? money(s.priceCents, e.currency) : 'gratuit'}`] as const)}
                       onChange={(v) => { setShipping({ ...shipping, [e.id]: v }); setError(null); }}
@@ -226,7 +226,7 @@ export default function PayScreen() {
         )}
         {method === 'CARD' && (
           <InfoNote icon="shield" tone="box">
-            Le paiement est traité sur la page sécurisée de notre prestataire. {config?.appName ?? 'Folio'} ne conserve aucune donnée bancaire.
+            Le paiement est traité sur la page sécurisée de notre prestataire. {config?.appName ?? 'Kalam'} ne conserve aucune donnée bancaire.
           </InfoNote>
         )}
 

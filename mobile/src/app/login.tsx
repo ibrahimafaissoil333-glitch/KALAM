@@ -54,7 +54,7 @@ export default function LoginScreen() {
         <Button label="Se connecter" variant="accent" loading={busy} onPress={submit} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ flex: 1, height: 1, backgroundColor: color.borderStrong }} />
-          <T muted style={{ fontSize: 14 }}>Nouveau sur Folio ?</T>
+          <T muted style={{ fontSize: 14 }}>Nouveau sur Kalam ?</T>
           <View style={{ flex: 1, height: 1, backgroundColor: color.borderStrong }} />
         </View>
         <Button label="Créer un compte" variant="ghost" onPress={() => router.replace({ pathname: '/signup', params: { reason } })} />

@@ -6,10 +6,12 @@ import { money } from '@/lib/format';
 import { useStore } from '@/lib/store';
 import { useQuery } from '@/lib/use-query';
 import { Button, Chip, Cover, Logo, ErrorBanner, IconButton, LinkButton, Skeleton, T, Tag } from '@/ui/components';
+import { HeroCarousel, PromoSlide } from '@/ui/hero-carousel';
 import { Icon } from '@/ui/icons';
 import { color, gutter } from '@/ui/theme';
 
 interface Home {
+  slides: PromoSlide[];
   featured: Ebook[];
   latest: Ebook[];
   categories: { name: string; slug: string }[];
@@ -23,7 +25,12 @@ export default function HomeScreen() {
   const { user, config } = useStore();
   const { data, error, loading, reload } = useQuery<Home>('catalog/home');
   const hero = data?.featured.slice(0, 2) ?? [];
-  const appName = config?.appName ?? 'Folio';
+  const appName = config?.appName ?? 'Kalam';
+  // Diapositives choisies par l'admin ; à défaut, la sélection du moment défile.
+  const slides: PromoSlide[] = data?.slides?.length
+    ? data.slides
+    : (data?.featured ?? []).slice(0, 5).map((e) => ({ id: e.id, headline: null, subtitle: null, videoPath: null, ebook: e }));
+  const greeting = user ? `Bonjour ${user.name}` : '';
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 24 }} refreshControl={<RefreshControl refreshing={loading && !!data} onRefresh={reload} />}>
@@ -34,6 +41,11 @@ export default function HomeScreen() {
         <IconButton icon="user" label={user ? 'Mon compte' : 'Se connecter'} onPress={() => router.navigate('/account')} />
       </View>
 
+      {slides.length > 0 ? (
+        <View style={{ paddingTop: 12 }}>
+          <HeroCarousel slides={slides} greeting={greeting} />
+        </View>
+      ) : (
       <View style={{ paddingHorizontal: gutter, paddingTop: 12 }}>
         <View style={{ backgroundColor: color.ink, borderRadius: 24, padding: 22, paddingTop: 24, minHeight: 248, overflow: 'hidden' }}>
           <View style={{ width: 200, gap: 14, zIndex: 1 }}>
@@ -53,6 +65,7 @@ export default function HomeScreen() {
           )}
         </View>
       </View>
+      )}
 
       <View style={{ paddingHorizontal: gutter, paddingTop: 20 }}>
         <Pressable

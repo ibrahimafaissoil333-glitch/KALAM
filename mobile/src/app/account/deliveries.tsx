@@ -56,7 +56,7 @@ export default function DeliveriesScreen() {
             return (
               <View key={s.id} style={{ gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: color.divider }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <T muted style={{ fontSize: 14 }}>Vendeur : {s.seller?.name ?? 'Folio'}</T>
+                  <T muted style={{ fontSize: 14 }}>Vendeur : {s.seller?.name ?? 'Kalam'}</T>
                   <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
                     <T weight="bold" style={{ fontSize: 12, color: fg }}>{label}</T>
                   </View>

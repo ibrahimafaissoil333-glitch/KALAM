@@ -431,7 +431,7 @@ const LOGO = require('../../assets/logo.png');
 const LOGO_RATIO = 463 / 520;
 
 /** Logo (livre et plume), recoloré dans la charte : livre encre, plume indigo. Toujours sur fond clair. */
-export function Logo({ height = 40, withName, name = 'Folio' }: { height?: number; withName?: boolean; name?: string }) {
+export function Logo({ height = 40, withName, name = 'Kalam' }: { height?: number; withName?: boolean; name?: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessible accessibilityRole="image" accessibilityLabel={name}>
       <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />

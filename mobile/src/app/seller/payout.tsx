@@ -79,7 +79,7 @@ export default function PayoutScreen() {
       <ScreenHeader back title="Moyens de réception" sub="Où vous recevez l’argent de vos ventes." />
       <View style={{ paddingHorizontal: gutter, gap: 14 }}>
         {(error || actionError) && <ErrorBanner message={(error ?? actionError)!} onRetry={error ? reload : undefined} />}
-        <InfoNote icon="lock" tone="box">Vos coordonnées sont chiffrées et ne sont jamais affichées en entier. Mobile Money : versement automatique. Compte bancaire : virement effectué par l’équipe Folio.</InfoNote>
+        <InfoNote icon="lock" tone="box">Vos coordonnées sont chiffrées et ne sont jamais affichées en entier. Mobile Money : versement automatique. Compte bancaire : virement effectué par l’équipe Kalam.</InfoNote>
 
         {!data ? <Skeleton h={80} /> : data.length > 0 && (
           <Card style={{ paddingHorizontal: 16 }}>

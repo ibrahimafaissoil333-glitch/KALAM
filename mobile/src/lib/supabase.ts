@@ -51,3 +51,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 export const coverUrl = (path: string | null | undefined) => (path ? `${SUPABASE_URL}/storage/v1/object/public/covers/${path}` : null);
+
+/** Vidéos du carrousel d'accueil (bucket public « promos »). */
+export const promoVideoUrl = (path: string | null | undefined) => (path ? `${SUPABASE_URL}/storage/v1/object/public/promos/${path}` : null);

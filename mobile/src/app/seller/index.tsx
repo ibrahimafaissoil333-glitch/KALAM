@@ -50,7 +50,7 @@ export default function SellerHome() {
             <Card style={{ padding: 16, gap: 10 }}>
               <T weight="bold" style={{ fontSize: 17 }}>Mes gains</T>
               {d.earnings.length === 0 ? (
-                <T muted style={{ fontSize: 14 }}>Vos gains apparaîtront ici après votre première vente (commission Folio déduite).</T>
+                <T muted style={{ fontSize: 14 }}>Vos gains apparaîtront ici après votre première vente (commission Kalam déduite).</T>
               ) : d.earnings.map((g) => (
                 <View key={g.currency} style={{ gap: 4 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

@@ -36,7 +36,7 @@ function LoginForm() {
     <form onSubmit={submit} className="card grid" style={{ gap: 18, width: '100%', maxWidth: 420, padding: 28 }} noValidate>
       <div className="row" style={{ gap: 14 }}>
         <img src="/logo.png" alt="" width={52} height={58} />
-        <span className="serif" style={{ fontSize: 36 }}>Folio</span>
+        <span className="serif" style={{ fontSize: 36 }}>Kalam</span>
       </div>
       <div>
         <h1 className="serif" style={{ fontSize: 30, fontWeight: 400 }}>Administration</h1>

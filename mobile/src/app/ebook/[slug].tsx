@@ -92,7 +92,7 @@ export default function EbookScreen() {
           </View>
           <T serif accessibilityRole="header" style={{ fontSize: 38, lineHeight: 40 }}>{e.title}</T>
           <T>par <T weight="bold">{e.author}</T></T>
-          <T muted style={{ fontSize: 14 }}>Vendu par {e.seller?.name ?? 'Folio'}</T>
+          <T muted style={{ fontSize: 14 }}>Vendu par {e.seller?.name ?? 'Kalam'}</T>
         </View>
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: gutter, paddingTop: 20 }}>
           {facts.map(([l, v]) => (

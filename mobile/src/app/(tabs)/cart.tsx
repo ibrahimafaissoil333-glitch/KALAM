@@ -67,7 +67,7 @@ export default function CartScreen() {
               <T muted style={{ fontSize: 14 }}>{e.author}</T>
               <KindBadge kind={e.kind} style={{ marginTop: 2 }} />
               <T muted style={{ fontSize: 13 }}>
-                {e.kind === 'PHYSICAL' ? `${e.condition ? CONDITION_LABEL[e.condition] : 'Livre'} · vendu par ${e.seller?.name ?? 'Folio'}` : 'Exemplaire numérique personnel'}
+                {e.kind === 'PHYSICAL' ? `${e.condition ? CONDITION_LABEL[e.condition] : 'Livre'} · vendu par ${e.seller?.name ?? 'Kalam'}` : 'Exemplaire numérique personnel'}
               </T>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                 <T weight="bold">{money(e.priceCents, e.currency)}</T>

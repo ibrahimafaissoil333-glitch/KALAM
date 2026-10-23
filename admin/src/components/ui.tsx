@@ -13,6 +13,7 @@ const NAV = [
   ['/orders', 'Commandes'],
   ['/users', 'Utilisateurs'],
   ['/stats', 'Statistiques'],
+  ['/promos', 'Carrousel'],
   ['/payments', 'Mobile Money'],
   ['/payouts', 'Versements'],
   ['/settings', 'Paramètres'],
@@ -32,7 +33,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <aside className="side">
         <div className="brand">
           <span className="mark"><img src="/logo.png" alt="" /></span>
-          <span>Folio <small>admin</small></span>
+          <span>Kalam <small>admin</small></span>
         </div>
         <nav className="nav" aria-label="Administration">
           {NAV.map(([href, label]) => {

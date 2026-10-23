@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Folio",
+    "name": "Kalam",
     "slug": "folio",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -29,7 +29,12 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-font",
-      ["expo-image-picker", { "photosPermission": "Folio accède à vos photos pour la couverture de vos livres mis en vente." }],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kalam accède à vos photos pour la couverture de vos livres mis en vente."
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -37,7 +42,8 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160
         }
-      ]
+      ],
+      "expo-video"
     ],
     "scheme": "folio",
     "extra": {

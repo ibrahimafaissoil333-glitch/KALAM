@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { randomUUID } from 'expo-crypto';
+import { File, UploadType } from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { coverUrl, SUPABASE_KEY, SUPABASE_URL, supabase } from './supabase';
@@ -179,25 +180,32 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   throw new ApiError(404, `Route inconnue : ${seg.join('/')}`);
 }
 
-/** Envoi d'une couverture ou du fichier du livre (formulaire multipart vers la fonction Edge « seller »). */
+/**
+ * Envoi d'une couverture ou du fichier du livre (multipart vers la fonction Edge « seller »).
+ * Envoi natif d'expo-file-system : le fetch d'Expo n'accepte pas les fichiers { uri } dans un FormData.
+ */
 export async function uploadSellerFile(ebookId: string, kind: 'cover' | 'main', file: { uri: string; name: string; mimeType: string }) {
   const { data } = await supabase.auth.getSession();
-  const form = new FormData();
-  form.append('ebookId', ebookId);
-  form.append('kind', kind);
-  form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
-  let res: Response;
+  let res: { status: number; body: string };
   try {
-    res = await fetch(`${SUPABASE_URL}/functions/v1/seller`, {
-      method: 'POST',
+    res = await new File(file.uri).upload(`${SUPABASE_URL}/functions/v1/seller`, {
+      httpMethod: 'POST',
+      uploadType: UploadType.MULTIPART,
+      fieldName: 'file',
+      mimeType: file.mimeType,
+      parameters: { ebookId, kind },
       headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${data.session?.access_token ?? SUPABASE_KEY}` },
-      body: form,
     });
   } catch {
     throw new NetworkError();
   }
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, json.message ?? 'Envoi impossible. Réessayez.');
+  let json: { message?: string } = {};
+  try {
+    json = JSON.parse(res.body);
+  } catch {
+    // corps vide ou non JSON
+  }
+  if (res.status < 200 || res.status >= 300) throw new ApiError(res.status, json.message ?? 'Envoi impossible. Réessayez.');
   return withCovers(json as SellerEbook);
 }
 
