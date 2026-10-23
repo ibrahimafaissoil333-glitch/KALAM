@@ -176,7 +176,7 @@ export default function Reader() {
       {isPreview && checkoutMode !== 'web_only' && (
         <View style={{ marginHorizontal: 20, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: color.ink }}>
           <T weight="semibold" style={{ flex: 1, fontSize: 14, color: '#FFFFFF' }}>Extrait gratuit</T>
-          <Button label="Acheter" variant="lime" small onPress={buy} style={{ minHeight: 40 }} />
+          <Button label="Acheter" variant="gold" small onPress={buy} style={{ minHeight: 40 }} />
         </View>
       )}
 
@@ -243,8 +243,8 @@ export default function Reader() {
               {book.chapters.map((c, i) => (
                 <Pressable key={i} onPress={() => goChapter(i)} accessibilityRole="button" accessibilityState={{ selected: i === chapter }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: color.divider, minHeight: 52 }}>
                   <T muted weight="semibold" style={{ width: 28, fontSize: 14 }}>{i + 1}</T>
-                  <T weight={i === chapter ? 'bold' : 'regular'} style={{ flex: 1, color: i === chapter ? color.indigo : color.ink }}>{c.title}</T>
-                  {i === chapter && <Icon name="check" size={18} color={color.indigo} />}
+                  <T weight={i === chapter ? 'bold' : 'regular'} style={{ flex: 1, color: i === chapter ? color.accent : color.ink }}>{c.title}</T>
+                  {i === chapter && <Icon name="check" size={18} color={color.accent} />}
                 </Pressable>
               ))}
             </ScrollView>

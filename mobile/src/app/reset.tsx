@@ -1,36 +1,45 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { ApiError, api, errorMessage } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { PASSWORD_RULES, passwordOk } from '@/lib/format';
+import { supabase } from '@/lib/supabase';
 import { Button, EmptyState, ErrorBanner, Rule, ScreenHeader, T, TextField, useToast } from '@/ui/components';
-import { gutter } from '@/ui/theme';
+import { color, gutter } from '@/ui/theme';
 
-/** Ouvert par le lien de l'e-mail : folio://reset?token=… */
+/**
+ * Ouvert par le lien de l'e-mail : folio://reset?code=… (flux PKCE de Supabase Auth).
+ * Le code, à usage unique et limité dans le temps, ouvre une session de récupération.
+ */
 export default function ResetScreen() {
-  const { token } = useLocalSearchParams<{ token?: string }>();
+  const { code } = useLocalSearchParams<{ code?: string }>();
   const toast = useToast();
+  const [ready, setReady] = useState(false);
+  const [expired, setExpired] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [expired, setExpired] = useState(!token);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!code) {
+      setExpired(true);
+      return;
+    }
+    supabase.auth.exchangeCodeForSession(code).then(({ error: e }) => (e ? setExpired(true) : setReady(true)));
+  }, [code]);
 
   const submit = async () => {
     setError(null);
     if (!passwordOk(password)) return setError('Le mot de passe doit contenir au moins 8 caractères, dont une lettre et un chiffre.');
     if (password !== confirm) return setError('Les deux mots de passe ne sont pas identiques.');
     setBusy(true);
-    try {
-      await api('auth/reset-password', { method: 'POST', auth: false, body: { token, password } });
-      toast('Mot de passe enregistré');
-      router.replace('/login');
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 400 && e.message.includes('expiré')) setExpired(true);
-      else setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
+    const { error: e } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+    if (e) return setError(e.message);
+    // Toutes les sessions sont fermées ; l'utilisateur se reconnecte avec son nouveau mot de passe.
+    await supabase.auth.signOut({ scope: 'global' });
+    toast('Mot de passe enregistré');
+    router.replace('/login');
   };
 
   if (expired) {
@@ -40,6 +49,13 @@ export default function ResetScreen() {
         <EmptyState icon="clock" title="Ce lien a expiré" text="Pour votre sécurité, un lien n’est valable que 30 minutes et ne sert qu’une fois.">
           <Button label="Demander un nouveau lien" variant="accent" onPress={() => router.replace('/forgot')} />
         </EmptyState>
+      </View>
+    );
+  }
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={color.accent} />
       </View>
     );
   }

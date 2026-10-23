@@ -46,7 +46,7 @@ export default function DeleteAccount() {
         <TextField label={`Saisissez ${WORD} pour confirmer`} value={word} onChangeText={setWord} autoCapitalize="characters" autoCorrect={false} />
         <TextField label="Mot de passe" value={password} onChangeText={setPassword} password autoComplete="current-password" />
         <Button label="Supprimer définitivement" variant="danger" loading={busy} disabled={word.trim() !== WORD || !password} onPress={submit} />
-        <Button label="Annuler" variant="ghost" onPress={() => router.back()} />
+        <Button label="Annuler" variant="ghost" onPress={() => (router.canGoBack() ? router.back() : router.replace('/account'))} />
       </View>
     </ScrollView>
   );

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 // ── Menu latéral ──────────────────────────────────────────────
 
@@ -21,14 +22,15 @@ export function Shell({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const logout = async () => {
     setBusy(true);
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await supabase.auth.signOut();
     window.location.href = '/login';
   };
   return (
     <div className="shell">
       <aside className="side">
         <div className="brand">
-          Folio<span>.</span> <span style={{ fontSize: 13, color: '#a9abb8', fontFamily: 'var(--sans)' }}>admin</span>
+          <span className="mark"><img src="/logo.png" alt="" /></span>
+          <span>Folio <small>admin</small></span>
         </div>
         <nav className="nav" aria-label="Administration">
           {NAV.map(([href, label]) => {

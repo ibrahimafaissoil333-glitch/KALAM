@@ -134,7 +134,7 @@ export default function LibraryScreen() {
             style={{ minHeight: 52, borderRadius: 14, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, paddingLeft: 48, paddingRight: 16, fontSize: 16, fontFamily: font.regular, color: color.ink }}
           />
         </View>
-        <View accessibilityRole="tablist" style={{ flexDirection: 'row', backgroundColor: '#EFEEE9', borderRadius: 12, padding: 4 }}>
+        <View accessibilityRole="tablist" style={{ flexDirection: 'row', backgroundColor: color.infoSoft, borderRadius: 12, padding: 4 }}>
           {TABS.map(([k, l]) => (
             <Pressable key={k} onPress={() => setTab(k)} accessibilityRole="tab" accessibilityState={{ selected: tab === k }} style={{ flex: 1, minHeight: 40, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: tab === k ? color.surface : 'transparent' }}>
               <T weight="semibold" style={{ fontSize: 14, color: tab === k ? color.ink : color.muted }}>{l}</T>
@@ -173,12 +173,12 @@ export default function LibraryScreen() {
           <View style={{ flexDirection: 'row', gap: 14, paddingVertical: 16, marginHorizontal: gutter, borderBottomWidth: 1, borderBottomColor: color.divider }}>
             <Cover title={it.title} author={it.author} cover={it.cover} width={76} />
             <View style={{ flex: 1, gap: 4 }}>
-              {isNew && <Tag label="Nouveau" tone="lime" />}
+              {isNew && <Tag label="Nouveau" tone="gold" />}
               <T weight="bold">{it.title}</T>
               <T muted style={{ fontSize: 14 }}>{it.author}</T>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }} accessibilityLabel={`Progression : ${p} %`}>
                 <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: color.border }}>
-                  <View style={{ width: `${p}%`, height: 4, borderRadius: 2, backgroundColor: color.indigo }} />
+                  <View style={{ width: `${p}%`, height: 4, borderRadius: 2, backgroundColor: color.accent }} />
                 </View>
                 <T muted weight="semibold" style={{ fontSize: 12 }}>{p} %</T>
               </View>

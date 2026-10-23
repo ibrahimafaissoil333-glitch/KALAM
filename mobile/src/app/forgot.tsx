@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { api, errorMessage } from '@/lib/api';
+import * as Linking from 'expo-linking';
+import { errorMessage } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { Button, EmptyState, ErrorBanner, LinkButton, ScreenHeader, T, TextField } from '@/ui/components';
 import { gutter } from '@/ui/theme';
 
@@ -26,7 +28,9 @@ export default function ForgotScreen() {
     if (!email.includes('@')) return setError('Saisissez une adresse e-mail valide.');
     setBusy(true);
     try {
-      await api('auth/forgot-password', { method: 'POST', auth: false, body: { email: email.trim() } });
+      // Réponse identique que le compte existe ou non (pas d'énumération des comptes).
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: Linking.createURL('reset') });
+      if (error && error.status === 429) throw new Error('Trop de demandes. Réessayez dans quelques minutes.');
       setSent(true);
       setWait(RESEND_DELAY);
     } catch (e) {
@@ -43,7 +47,7 @@ export default function ForgotScreen() {
         <EmptyState icon="mail" title="Vérifiez votre boîte mail" text={`Si un compte existe pour ${email.trim()}, vous allez recevoir un lien pour choisir un nouveau mot de passe. Il est valable 30 minutes.`}>
           {error && <ErrorBanner message={error} />}
           <Button label={wait > 0 ? `Renvoyer dans ${wait} s` : 'Renvoyer le lien'} variant="ghost" disabled={wait > 0} loading={busy} onPress={send} />
-          <LinkButton label="Revenir à la connexion" onPress={() => router.back()} style={{ alignSelf: 'center' }} />
+          <LinkButton label="Revenir à la connexion" onPress={() => (router.canGoBack() ? router.back() : router.replace('/login'))} style={{ alignSelf: 'center' }} />
         </EmptyState>
       </View>
     );

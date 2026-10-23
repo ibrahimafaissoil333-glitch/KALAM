@@ -1,5 +1,7 @@
 # Phase 3 — Conception technique
 
+> **Mise à jour (octobre 2026)** : le backend NestJS décrit ici a été remplacé par Supabase. Les règles de sécurité et le flux de paiement restent valables ; leur mise en œuvre est décrite dans [03b-supabase.md](03b-supabase.md).
+
 ## 1. Architecture
 
 ```

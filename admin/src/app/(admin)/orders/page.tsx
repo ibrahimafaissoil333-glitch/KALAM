@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Empty, ErrorState, PageHead, Skeleton, Status, statusLabel } from '@/components/ui';
-import { date, money, useApi } from '@/lib/api';
+import { date, downloadOrdersCsv, money, useApi } from '@/lib/api';
 import type { Order } from '@/lib/types';
 
 const STATUSES = ['', 'PAID', 'PENDING', 'FAILED', 'REFUNDED', 'CANCELED'];
@@ -32,9 +32,9 @@ export default function OrdersPage() {
   return (
     <>
       <PageHead title="Commandes" sub="Aucune donnée bancaire n’est stockée ni affichée">
-        <a className="btn btn-ghost" href={`/api/v1/admin/orders/export.csv?${filters}`} download>
+        <button className="btn btn-ghost" onClick={() => downloadOrdersCsv(debounced || null, status || null).catch((e) => alert(e.message))}>
           Exporter en CSV
-        </a>
+        </button>
       </PageHead>
       <div className="row" style={{ marginBottom: 16 }}>
         <label htmlFor="q" className="sr-only">Rechercher une commande</label>

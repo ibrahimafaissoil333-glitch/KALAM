@@ -255,7 +255,7 @@ export function EbookEditor({ id }: { id?: string }) {
               <Cover title={form.title || 'Titre'} author={form.author || 'Auteur'} cover={preview} w={132} />
             </div>
             <div>
-              {form.category && <span className="pill p-ok" style={{ background: 'var(--indigo-soft)', color: 'var(--indigo-text)' }}>{form.category}</span>}
+              {form.category && <span className="pill p-ok" style={{ background: 'var(--accent-soft)', color: 'var(--accent-text)' }}>{form.category}</span>}
               <div className="serif" style={{ fontSize: 26, lineHeight: 1.05, marginTop: 8 }}>{form.title || 'Titre'}</div>
               <div className="muted">par {form.author || 'Auteur'}</div>
               <div style={{ fontWeight: 700, marginTop: 6 }}>{priceCents === null || priceCents === 'invalid' ? '[Prix à définir]' : money(priceCents, form.currency)}</div>

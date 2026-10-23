@@ -1,13 +1,17 @@
-/** Système visuel Folio (docs/design-tokens.json). */
+/**
+ * Système visuel Folio (docs/design-tokens.json). Le logo est recoloré dans cette charte :
+ * livre en encre, plume en indigo. « gold » = l’accent lime, uniquement sur fond encre.
+ */
 export const color = {
   ink: '#14151F',
   inkPressed: '#2B2D3A',
-  indigo: '#3B36E0',
-  indigoPressed: '#2A25B8',
-  indigoSoft: '#ECEBFF',
-  indigoText: '#2E29B8',
-  indigoDeep: '#241FA0',
-  lime: '#D7F25C',
+  accent: '#3B36E0',
+  accentPressed: '#2A25B8',
+  accentSoft: '#ECEBFF',
+  accentText: '#2E29B8',
+  accentDeep: '#241FA0',
+  gold: '#D7F25C',
+  goldPressed: '#C9E44A',
   paper: '#FAFAF7',
   surface: '#FFFFFF',
   muted: '#5C5E6B',
@@ -29,6 +33,7 @@ export const color = {
   neutralSoft: '#ECECEF',
   neutralText: '#3D3E48',
   infoSoft: '#EEF0EC',
+  focusRing: '#E3E2FF',
   readerPaper: '#F6F1E6',
   readerText: '#22201A',
   readerMuted: '#5F5A4C',

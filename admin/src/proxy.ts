@@ -1,8 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-/** Redirige vers /login toute page de l'admin ouverte sans session. */
+/**
+ * Redirige vers /login toute page ouverte sans session Supabase.
+ * Ce n'est qu'un confort de navigation : l'accès aux données est contrôlé côté Supabase
+ * (rôle ADMIN vérifié par chaque fonction SQL et par les règles RLS).
+ */
 export function proxy(req: NextRequest) {
-  const hasSession = req.cookies.has('folio_admin_rt') || req.cookies.has('folio_admin_at');
+  const hasSession = req.cookies.getAll().some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'));
   if (!hasSession) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
@@ -13,5 +17,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!login|api|_next|favicon.ico).*)'],
+  matcher: ['/((?!login|_next|favicon.ico|icon.png|logo.png).*)'],
 };

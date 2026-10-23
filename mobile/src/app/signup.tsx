@@ -5,7 +5,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { errorMessage } from '@/lib/api';
 import { PASSWORD_RULES, passwordOk } from '@/lib/format';
 import { useStore } from '@/lib/store';
-import { Button, Checkbox, ErrorBanner, LinkButton, Rule, ScreenHeader, T, TextField, useToast } from '@/ui/components';
+import { Button, Checkbox, ErrorBanner, LinkButton, Logo, Rule, ScreenHeader, T, TextField, useToast } from '@/ui/components';
 import { gutter } from '@/ui/theme';
 import { continueAfterAuth } from '@/lib/navigation';
 
@@ -46,6 +46,7 @@ export default function SignupScreen() {
       <ScreenHeader back />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: gutter, paddingTop: 8, paddingBottom: 32, gap: 20 }}>
         <View style={{ gap: 10 }}>
+          <Logo height={56} />
           <T serif accessibilityRole="header" style={{ fontSize: 38, lineHeight: 40 }}>Créer votre compte</T>
           <T muted>Trois champs, et votre bibliothèque est prête.</T>
         </View>

@@ -1,5 +1,7 @@
 # Phase 6 — Mise en production
 
+> **Backend sur Supabase** : les étapes de déploiement (migrations, fonctions, secrets, webhook, cron des e-mails) sont dans [03b-supabase.md](03b-supabase.md#déploiement-sur-le-projet-en-ligne). Les vérifications ci-dessous restent valables ; les variables citées deviennent des secrets Supabase (`supabase secrets set`).
+
 ## 1. Vérifications avant la mise en production
 
 **Configuration de l'API** (voir `api/.env.example`)

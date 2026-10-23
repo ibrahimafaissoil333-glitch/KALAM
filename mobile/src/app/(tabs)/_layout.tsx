@@ -31,7 +31,7 @@ export default function TabsLayout() {
               {TABS.map((t, i) => {
                 const active = state.index === i;
                 const badge = t.name === 'cart' && cart.items.length > 0 ? cart.items.length : 0;
-                const fg = active ? color.indigo : color.muted;
+                const fg = active ? color.accent : color.muted;
                 return (
                   <Pressable
                     key={t.name}
@@ -47,7 +47,7 @@ export default function TabsLayout() {
                     <View>
                       <Icon name={t.icon} size={24} color={fg} />
                       {badge > 0 && (
-                        <View style={{ position: 'absolute', top: -4, left: 16, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.indigo, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
+                        <View style={{ position: 'absolute', top: -4, left: 16, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
                           <T weight="bold" allowFontScaling={false} style={{ color: '#FFFFFF', fontSize: 11 }}>{badge}</T>
                         </View>
                       )}

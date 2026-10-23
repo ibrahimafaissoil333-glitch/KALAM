@@ -65,7 +65,7 @@ export default function CheckoutResult() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: gutter, paddingBottom: 16, gap: 20, flexGrow: 1 }}>
         {!order && !error && (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-            <ActivityIndicator size="large" color={color.indigo} />
+            <ActivityIndicator size="large" color={color.accent} />
             <T muted>Vérification du paiement…</T>
           </View>
         )}
@@ -118,11 +118,11 @@ export default function CheckoutResult() {
             ))}
             {!gaveUp ? (
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
-                <ActivityIndicator color={color.indigo} />
+                <ActivityIndicator color={color.accent} />
                 <T muted style={{ fontSize: 14 }}>Vérification automatique en cours…</T>
               </View>
             ) : (
-              <InfoNote icon="mail" tone="indigo">La confirmation prend plus de temps que prévu. Vous recevrez un e-mail dès qu’elle arrivera ; vous pouvez fermer cet écran.</InfoNote>
+              <InfoNote icon="mail" tone="accent">La confirmation prend plus de temps que prévu. Vous recevrez un e-mail dès qu’elle arrivera ; vous pouvez fermer cet écran.</InfoNote>
             )}
           </>
         )}

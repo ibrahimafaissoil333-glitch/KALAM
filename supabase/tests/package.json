@@ -1,0 +1,14 @@
+{
+  "name": "folio-supabase-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node --env-file=.env seed.mjs",
+    "test": "node --env-file=.env --test --test-concurrency=1 \"*.test.mjs\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "jszip": "^3.10.2",
+    "pg": "^8.23.1"
+  }
+}

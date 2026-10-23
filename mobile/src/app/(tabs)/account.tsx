@@ -69,7 +69,7 @@ export default function AccountScreen() {
     <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 12, paddingHorizontal: gutter, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: color.ink, alignItems: 'center', justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <T serif style={{ fontSize: 28, color: color.lime }}>{user.name.charAt(0).toUpperCase()}</T>
+          <T serif style={{ fontSize: 28, color: color.gold }}>{user.name.charAt(0).toUpperCase()}</T>
         </View>
         <View style={{ flex: 1 }}>
           <T weight="bold" accessibilityRole="header" style={{ fontSize: 22 }}>{user.name}</T>

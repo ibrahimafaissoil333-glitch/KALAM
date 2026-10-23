@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 function LoginForm() {
   const params = useSearchParams();
@@ -17,20 +18,25 @@ function LoginForm() {
     if (!email.includes('@')) return setError('Saisissez une adresse e-mail valide.');
     if (!password) return setError('Saisissez votre mot de passe.');
     setBusy(true);
-    const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password }) });
-    setBusy(false);
-    if (!res.ok) {
-      const b = await res.json().catch(() => ({}));
-      return setError(b.message ?? 'Connexion impossible.');
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    // Seuls les administrateurs entrent ; même message qu'un mauvais mot de passe pour un compte client.
+    const admin = !authError && (await supabase.rpc('is_admin')).data === true;
+    if (!admin) {
+      if (!authError) await supabase.auth.signOut();
+      setBusy(false);
+      return setError(authError?.status === 429 ? 'Trop de tentatives. Réessayez dans quelques minutes.' : 'E-mail ou mot de passe incorrect.');
     }
+    await supabase.rpc('register_device', { p_key: 'admin-web', p_label: 'Administration web', p_platform: 'web' });
+    setBusy(false);
     const next = params.get('next');
     window.location.href = next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
   };
 
   return (
     <form onSubmit={submit} className="card grid" style={{ gap: 18, width: '100%', maxWidth: 420, padding: 28 }} noValidate>
-      <div className="serif" style={{ fontSize: 36 }}>
-        Folio<span style={{ color: 'var(--indigo)' }}>.</span>
+      <div className="row" style={{ gap: 14 }}>
+        <img src="/logo.png" alt="" width={52} height={58} />
+        <span className="serif" style={{ fontSize: 36 }}>Folio</span>
       </div>
       <div>
         <h1 className="serif" style={{ fontSize: 30, fontWeight: 400 }}>Administration</h1>

@@ -5,7 +5,7 @@ import type { Ebook } from '@/lib/api';
 import { money } from '@/lib/format';
 import { useStore } from '@/lib/store';
 import { useQuery } from '@/lib/use-query';
-import { Button, Chip, Cover, ErrorBanner, IconButton, LinkButton, Skeleton, T, Tag } from '@/ui/components';
+import { Button, Chip, Cover, Logo, ErrorBanner, IconButton, LinkButton, Skeleton, T, Tag } from '@/ui/components';
 import { Icon } from '@/ui/icons';
 import { color, gutter } from '@/ui/theme';
 
@@ -28,19 +28,18 @@ export default function HomeScreen() {
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 24 }} refreshControl={<RefreshControl refreshing={loading && !!data} onRefresh={reload} />}>
       <View style={{ paddingTop: insets.top + 12, paddingHorizontal: gutter, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <T serif accessibilityRole="header" style={{ fontSize: 32 }}>
-          {appName}
-          <T serif style={{ fontSize: 32, color: color.indigo }}>.</T>
-        </T>
+        <View accessibilityRole="header">
+          <Logo height={40} withName name={appName} />
+        </View>
         <IconButton icon="user" label={user ? 'Mon compte' : 'Se connecter'} onPress={() => router.navigate('/account')} />
       </View>
 
       <View style={{ paddingHorizontal: gutter, paddingTop: 12 }}>
         <View style={{ backgroundColor: color.ink, borderRadius: 24, padding: 22, paddingTop: 24, minHeight: 248, overflow: 'hidden' }}>
           <View style={{ width: 200, gap: 14, zIndex: 1 }}>
-            <T weight="bold" style={{ fontSize: 12, letterSpacing: 1.7, textTransform: 'uppercase', color: color.lime }}>{user ? `Bonjour ${user.name}` : 'Nouveauté'}</T>
+            <T weight="bold" style={{ fontSize: 12, letterSpacing: 1.7, textTransform: 'uppercase', color: color.gold }}>{user ? `Bonjour ${user.name}` : 'Nouveauté'}</T>
             <T serif accessibilityRole="header" style={{ color: '#FFFFFF', fontSize: 34, lineHeight: 35 }}>Achetez, puis lisez dans la minute.</T>
-            <Button label="Explorer" variant="lime" small iconRight="arrow" onPress={() => router.navigate('/catalog')} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+            <Button label="Explorer" variant="gold" small iconRight="arrow" onPress={() => router.navigate('/catalog')} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
           </View>
           {hero[0] && (
             <View style={{ position: 'absolute', right: -18, top: 30, transform: [{ rotate: '8deg' }] }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>

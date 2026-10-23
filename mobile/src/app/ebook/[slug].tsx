@@ -23,7 +23,7 @@ export default function EbookScreen() {
   if (!e) {
     return (
       <View style={{ flex: 1, paddingTop: insets.top + 12, paddingHorizontal: gutter, gap: 20 }}>
-        <IconButton icon="back" label="Retour" onPress={() => router.back()} />
+        <IconButton icon="back" label="Retour" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         {loading && (
           <View style={{ alignItems: 'center', gap: 20 }}>
             <Skeleton w={196} h={290} />
@@ -99,8 +99,8 @@ export default function EbookScreen() {
             accessibilityRole="button"
             style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface }, pressed && { opacity: 0.7 }]}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: color.indigoSoft, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="eye" color={color.indigo} />
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="eye" color={color.accent} />
             </View>
             <View style={{ flex: 1 }}>
               <T weight="bold">{e.owned ? 'Ouvrir dans le lecteur' : 'Lire un extrait gratuit'}</T>

@@ -42,7 +42,7 @@ export function H1({ children, style }: { children: ReactNode; style?: StyleProp
 
 // ── Boutons ───────────────────────────────────────────────────
 
-type ButtonVariant = 'primary' | 'accent' | 'ghost' | 'lime' | 'link' | 'danger';
+type ButtonVariant = 'primary' | 'accent' | 'ghost' | 'gold' | 'link' | 'danger';
 
 export function Button({
   label, onPress, variant = 'primary', small, icon, iconRight, loading, disabled, style, accessibilityLabel,
@@ -77,10 +77,10 @@ export function Button({
 
 const VARIANTS: Record<ButtonVariant, { bg: string; pressed: string; fg: string; border?: string }> = {
   primary: { bg: color.ink, pressed: color.inkPressed, fg: '#FFFFFF' },
-  accent: { bg: color.indigo, pressed: color.indigoPressed, fg: '#FFFFFF' },
-  ghost: { bg: 'transparent', pressed: '#F0EFEA', fg: color.ink, border: '#D6D5CF' },
-  lime: { bg: color.lime, pressed: '#C9E44A', fg: color.ink },
-  link: { bg: 'transparent', pressed: 'transparent', fg: color.indigo },
+  accent: { bg: color.accent, pressed: color.accentPressed, fg: '#FFFFFF' },
+  ghost: { bg: 'transparent', pressed: color.divider, fg: color.ink, border: color.borderStrong },
+  gold: { bg: color.gold, pressed: color.goldPressed, fg: color.ink },
+  link: { bg: 'transparent', pressed: 'transparent', fg: color.accent },
   danger: { bg: 'transparent', pressed: color.dangerSoft, fg: color.dangerText, border: '#F0C4C6' },
 };
 
@@ -94,7 +94,7 @@ export function IconButton({ icon, label, onPress, badge, tone = 'default', styl
       style={({ pressed }) => [
         styles.ibtn,
         tone === 'reader' && { backgroundColor: 'transparent', borderColor: color.readerBorder },
-        pressed && { backgroundColor: '#F3F2EE' },
+        pressed && { backgroundColor: color.divider },
         style,
       ]}
     >
@@ -111,7 +111,7 @@ export function IconButton({ icon, label, onPress, badge, tone = 'default', styl
 export function LinkButton({ label, onPress, style }: { label: string; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" hitSlop={8} style={[{ minHeight: size.touch, justifyContent: 'center' }, style]}>
-      {({ pressed }) => <T weight="semibold" style={{ fontSize: 14, color: pressed ? color.indigoPressed : color.indigo }}>{label}</T>}
+      {({ pressed }) => <T weight="semibold" style={{ fontSize: 14, color: pressed ? color.accentPressed : color.accent }}>{label}</T>}
     </Pressable>
   );
 }
@@ -131,10 +131,10 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
   );
 }
 
-export function Tag({ label, tone = 'indigo' }: { label: string; tone?: 'indigo' | 'lime' }) {
+export function Tag({ label, tone = 'accent' }: { label: string; tone?: 'accent' | 'gold' }) {
   return (
-    <View style={[styles.tag, tone === 'lime' && { backgroundColor: color.lime }]}>
-      <T weight="bold" style={{ fontSize: 12, letterSpacing: 0.2, color: tone === 'lime' ? color.ink : color.indigoText }}>{label}</T>
+    <View style={[styles.tag, tone === 'gold' && { backgroundColor: color.gold }]}>
+      <T weight="bold" style={{ fontSize: 12, letterSpacing: 0.2, color: tone === 'gold' ? color.ink : color.accentText }}>{label}</T>
     </View>
   );
 }
@@ -179,7 +179,7 @@ export function TextField({ label, error, hint, password, ...input }: TextInputP
           onBlur={() => setFocus(false)}
           style={[
             styles.input,
-            focus && { borderColor: color.indigo, boxShadow: `0 0 0 4px ${'#E3E2FF'}` },
+            focus && { borderColor: color.accent, boxShadow: `0 0 0 4px ${color.focusRing}` },
             !!error && { borderColor: color.danger },
             password && { paddingRight: 56 },
           ]}
@@ -213,7 +213,7 @@ export function Rule({ ok, label }: { ok: boolean; label: string }) {
 export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
   return (
     <Pressable onPress={() => onChange(!checked)} accessibilityRole="checkbox" accessibilityState={{ checked }} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', minHeight: size.touch }}>
-      <View style={[styles.box, checked && { backgroundColor: color.indigo, borderColor: color.indigo }]}>
+      <View style={[styles.box, checked && { backgroundColor: color.accent, borderColor: color.accent }]}>
         {checked && <Icon name="check" size={16} color="#FFFFFF" stroke={2.6} />}
       </View>
       <View style={{ flex: 1 }}>{children}</View>
@@ -234,7 +234,7 @@ export function Switch({ value, onChange, disabled, label, sub }: { value: boole
         <T weight="semibold" style={{ fontSize: 15 }}>{label}</T>
         {sub && <T muted style={{ fontSize: 13 }}>{sub}</T>}
       </View>
-      <View style={[styles.switch, value && { backgroundColor: color.indigo }, disabled && { opacity: 0.55 }]}>
+      <View style={[styles.switch, value && { backgroundColor: color.accent }, disabled && { opacity: 0.55 }]}>
         <View style={[styles.knob, { left: value ? 24 : 4 }]} />
       </View>
     </Pressable>
@@ -289,7 +289,7 @@ export function EmptyState({ icon, title, text, children }: { icon: IconName; ti
   return (
     <View style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36, paddingVertical: 32, gap: 16 }}>
       <View style={styles.iconTile}>
-        <Icon name={icon} size={44} color={color.indigo} stroke={1.6} />
+        <Icon name={icon} size={44} color={color.accent} stroke={1.6} />
       </View>
       <T serif accessibilityRole="header" style={{ fontSize: 30, lineHeight: 33, textAlign: 'center' }}>{title}</T>
       {text && <T muted style={{ textAlign: 'center', lineHeight: 24 }}>{text}</T>}
@@ -308,13 +308,13 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
   );
 }
 
-export function InfoNote({ icon = 'info', children, tone = 'muted' }: { icon?: IconName; children: ReactNode; tone?: 'muted' | 'box' | 'indigo' }) {
-  const box = tone === 'box' ? { backgroundColor: color.infoSoft, padding: 14, paddingHorizontal: 16, borderRadius: 14 } : tone === 'indigo' ? { backgroundColor: color.indigoSoft, padding: 14, paddingHorizontal: 16, borderRadius: 14 } : {};
-  const fg = tone === 'indigo' ? color.indigoDeep : tone === 'box' ? '#2E3040' : color.muted;
+export function InfoNote({ icon = 'info', children, tone = 'muted' }: { icon?: IconName; children: ReactNode; tone?: 'muted' | 'box' | 'accent' }) {
+  const box = tone === 'box' ? { backgroundColor: color.infoSoft, padding: 14, paddingHorizontal: 16, borderRadius: 14 } : tone === 'accent' ? { backgroundColor: color.accentSoft, padding: 14, paddingHorizontal: 16, borderRadius: 14 } : {};
+  const fg = tone === 'accent' ? color.accentDeep : tone === 'box' ? '#2E3040' : color.muted;
   return (
     <View style={[{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }, box]}>
       <Icon name={icon} size={18} color={fg} />
-      <T weight={tone === 'indigo' ? 'semibold' : 'regular'} style={{ flex: 1, fontSize: 13, lineHeight: 19, color: fg }}>{children}</T>
+      <T weight={tone === 'accent' ? 'semibold' : 'regular'} style={{ flex: 1, fontSize: 13, lineHeight: 19, color: fg }}>{children}</T>
     </View>
   );
 }
@@ -361,7 +361,7 @@ export function StepBar({ step }: { step: 1 | 2 | 3 }) {
     <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: gutter, paddingVertical: 8 }} accessibilityLabel={`Étape ${step} sur 3 : ${steps[step - 1]}`}>
       {steps.map((s, i) => (
         <View key={s} style={{ flex: 1, gap: 6 }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <View style={{ height: 4, borderRadius: 2, backgroundColor: i < step ? color.indigo : color.border }} />
+          <View style={{ height: 4, borderRadius: 2, backgroundColor: i < step ? color.accent : color.border }} />
           <T weight={i === step - 1 ? 'bold' : 'semibold'} style={{ fontSize: 12, color: i < step ? color.ink : color.muted }}>{s}</T>
         </View>
       ))}
@@ -372,7 +372,7 @@ export function StepBar({ step }: { step: 1 | 2 | 3 }) {
 export function OfflineBanner() {
   return (
     <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: color.ink, paddingVertical: 8, paddingHorizontal: gutter }} accessibilityRole="alert">
-      <Icon name="offline" size={16} color={color.lime} />
+      <Icon name="offline" size={16} color={color.gold} />
       <T weight="semibold" style={{ color: '#FFFFFF', fontSize: 13 }}>Hors ligne · seuls les e-books téléchargés sont disponibles</T>
     </View>
   );
@@ -409,18 +409,33 @@ const styles = StyleSheet.create({
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: size.button, paddingHorizontal: 20, borderRadius: radius.button },
   btnSm: { minHeight: size.buttonSm, paddingHorizontal: 16, borderRadius: radius.control },
   ibtn: { width: size.touch, height: size.touch, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: color.borderControl, backgroundColor: color.surface },
-  badge: { position: 'absolute', minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.indigo, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  badge: { position: 'absolute', minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   badgeText: { color: '#FFFFFF', fontSize: 11 },
   chip: { minHeight: size.chip, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1.5, borderColor: color.borderControl, backgroundColor: color.surface, justifyContent: 'center' },
-  tag: { alignSelf: 'flex-start', minHeight: 26, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.indigoSoft, justifyContent: 'center' },
+  tag: { alignSelf: 'flex-start', minHeight: 26, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.accentSoft, justifyContent: 'center' },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 26, paddingHorizontal: 10, borderRadius: 999, alignSelf: 'flex-start' },
   dot: { width: 6, height: 6, borderRadius: 3 },
   input: { minHeight: size.input, borderRadius: radius.button, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, paddingHorizontal: 16, fontSize: 16, fontFamily: font.regular, color: color.ink },
   box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   switch: { width: 50, height: 30, borderRadius: 999, backgroundColor: '#C9C8C2' },
   knob: { position: 'absolute', top: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
-  iconTile: { width: 96, height: 96, borderRadius: radius.tile, backgroundColor: color.indigoSoft, alignItems: 'center', justifyContent: 'center' },
+  iconTile: { width: 96, height: 96, borderRadius: radius.tile, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' },
   err: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: color.dangerSoft, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, minHeight: 44 },
   card: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radius.card },
   toast: { position: 'absolute', left: 16, right: 16, bottom: 110, backgroundColor: color.ink, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', gap: 10, alignItems: 'center', boxShadow: '0 14px 30px -10px rgba(20,21,31,.6)' },
 });
+
+// ── Logo ──────────────────────────────────────────────────────
+
+const LOGO = require('../../assets/logo.png');
+const LOGO_RATIO = 463 / 520;
+
+/** Logo (livre et plume), recoloré dans la charte : livre encre, plume indigo. Toujours sur fond clair. */
+export function Logo({ height = 40, withName, name = 'Folio' }: { height?: number; withName?: boolean; name?: string }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessible accessibilityRole="image" accessibilityLabel={name}>
+      <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+      {withName && <T serif style={{ fontSize: height * 0.8, lineHeight: height, color: color.ink }}>{name}</T>}
+    </View>
+  );
+}

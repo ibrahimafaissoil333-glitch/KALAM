@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#14151F",
+        "backgroundColor": "#FAFAF7",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,15 +32,16 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#14151F",
+          "backgroundColor": "#FAFAF7",
           "image": "./assets/splash-icon.png",
-          "imageWidth": 120
+          "imageWidth": 160
         }
       ]
     ],
     "scheme": "folio",
     "extra": {
-      "apiUrl": "http://localhost:3000"
+      "supabaseUrl": "http://127.0.0.1:54321",
+      "supabaseKey": "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH"
     }
   }
 }

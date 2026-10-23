@@ -6,7 +6,7 @@ Les critères d'acceptation CA-01 à CA-27 viennent de [01-cadrage.md](01-cadrag
 
 | Type | Portée | Outil / méthode | Automatisé |
 |---|---|---|---|
-| Fonctionnel API | Auth, catalogue, panier, commandes, webhooks, bibliothèque, admin | `npm test --prefix api` (node:test + supertest, base `folio_test`) | Oui, 32 tests |
+| Fonctionnel backend | Auth, catalogue, panier, commandes, webhooks, bibliothèque, admin, règles RLS | `cd supabase/tests && npm test` (node:test + supabase-js sur Supabase local) | Oui, 30 tests |
 | Fonctionnel mobile | Parcours principal et cas limites (§2) | Manuel sur simulateur et appareils réels ; Maestro en V2 | Partiel |
 | Fonctionnel admin | Création → publication, commandes, remboursement, RGPD | Manuel | Non |
 | Sécurité | §3 | Tests API automatisés + revue manuelle + scan OWASP ZAP sur la recette | Partiel |

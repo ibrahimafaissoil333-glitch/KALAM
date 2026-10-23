@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
-import { api, deviceInfo, Ebook, PublicConfig, session, SessionResponse } from './api';
+import { api, ApiError, deviceInfo, Ebook, PublicConfig, rpc } from './api';
+import { supabase } from './supabase';
 import { wipeOffline } from './offline';
 import { clearLibraryCache } from './progress';
 
@@ -80,24 +81,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [loadGuestCart]);
 
   const resetLocal = useCallback(async () => {
-    session.setAccess(null);
-    await session.setRefresh(null);
     await wipeOffline();
     await clearLibraryCache();
     setUserState(null);
     setCart(EMPTY);
   }, []);
 
-  // Démarrage : configuration publique, puis reprise de session si un jeton existe.
+  // Démarrage : configuration publique, puis reprise de la session Supabase si elle existe.
   useEffect(() => {
-    session.onLost(() => {
-      setUserState(null);
-      loadGuestCart();
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setUserState(null);
+        userRef.current = null;
+        loadGuestCart();
+      }
     });
     (async () => {
-      api<PublicConfig>('config', { auth: false }).then(setConfig).catch(() => undefined);
+      api<PublicConfig>('config').then(setConfig).catch(() => undefined);
       try {
-        if (await session.getRefresh()) {
+        if ((await supabase.auth.getSession()).data.session) {
           const me = await api<User>('me');
           setUserState(me);
           userRef.current = me;
@@ -112,14 +114,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setReady(true);
       }
     })();
+    return () => sub.subscription.unsubscribe();
   }, [loadGuestCart, refreshCart]);
 
-  /** Après connexion : le panier invité est fusionné dans le panier du compte (CDC §5.4). */
-  const startSession = useCallback(async (s: SessionResponse) => {
-    session.setAccess(s.accessToken);
-    await session.setRefresh(s.refreshToken);
-    setUserState(s.user);
-    userRef.current = s.user;
+  /**
+   * Après connexion : enregistrement de l'appareil (limite configurable), puis fusion du panier
+   * invité dans le panier du compte (CDC §5.4).
+   */
+  const startSession = useCallback(async () => {
+    const d = await deviceInfo();
+    try {
+      await rpc('register_device', { p_key: d.deviceKey, p_label: d.deviceLabel, p_platform: d.platform });
+    } catch (e) {
+      await supabase.auth.signOut();
+      throw e;
+    }
+    const me = await rpc<User>('me');
+    setUserState(me);
+    userRef.current = me;
     const guest: Ebook[] = JSON.parse((await AsyncStorage.getItem(GUEST_CART)) ?? '[]');
     const merged = await api<{ items: Ebook[]; totalCents: number; currency: string }>('cart/merge', { method: 'POST', body: { ebookIds: guest.map((e) => e.id) } });
     await AsyncStorage.removeItem(GUEST_CART);
@@ -127,18 +139,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const s = await api<SessionResponse>('auth/login', { method: 'POST', auth: false, body: { email, password, ...(await deviceInfo()) } });
-    await startSession(s);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    // Message générique : on ne révèle pas si le compte existe (CA-09).
+    if (error) throw new ApiError(error.status === 429 ? 429 : 401, error.status === 429 ? 'Trop de tentatives. Réessayez dans quelques minutes.' : 'E-mail ou mot de passe incorrect.');
+    await startSession();
   }, [startSession]);
 
   const register = useCallback(async (input: { name: string; email: string; password: string; marketingConsent: boolean }) => {
-    const s = await api<SessionResponse>('auth/register', { method: 'POST', auth: false, body: { ...input, acceptTerms: true, ...(await deviceInfo()) } });
-    await startSession(s);
+    const { data, error } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: { data: { name: input.name, accept_terms: true, marketing_consent: input.marketingConsent } },
+    });
+    if (error) {
+      const msg = /already/i.test(error.message) ? 'Un compte existe déjà avec cette adresse e-mail.'
+        : /password/i.test(error.message) ? 'Le mot de passe doit contenir au moins 8 caractères, dont une lettre et un chiffre.'
+        : error.message;
+      throw new ApiError(400, msg);
+    }
+    if (!data.session) throw new ApiError(400, 'Vérifiez votre boîte mail pour confirmer votre adresse, puis connectez-vous.');
+    await startSession();
   }, [startSession]);
 
   const logout = useCallback(async () => {
-    const rt = await session.getRefresh();
-    if (rt) api('auth/logout', { method: 'POST', auth: false, body: { refreshToken: rt } }).catch(() => undefined);
+    await supabase.auth.signOut().catch(() => undefined);
     await resetLocal();
   }, [resetLocal]);
 
