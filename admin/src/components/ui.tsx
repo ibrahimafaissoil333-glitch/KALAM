@@ -13,6 +13,8 @@ const NAV = [
   ['/orders', 'Commandes'],
   ['/users', 'Utilisateurs'],
   ['/stats', 'Statistiques'],
+  ['/payments', 'Mobile Money'],
+  ['/payouts', 'Versements'],
   ['/settings', 'Paramètres'],
   ['/audit', 'Journal'],
 ] as const;
@@ -78,6 +80,8 @@ const STATUS: Record<string, [string, string]> = {
   DRAFT: ['Brouillon', 'p-wait'],
   PUBLISHED: ['Publié', 'p-ok'],
   ARCHIVED: ['Archivé', 'p-ref'],
+  PAUSED: ['En pause', 'p-wait'],
+  PROCESSING: ['En cours', 'p-wait'],
   ACTIVE: ['Actif', 'p-ok'],
   SUSPENDED: ['Suspendu', 'p-ko'],
   DELETED: ['Supprimé', 'p-ref'],

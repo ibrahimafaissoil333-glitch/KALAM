@@ -101,6 +101,15 @@ export default function AccountScreen() {
       </View>
 
       <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
+        <T serif accessibilityRole="header" style={{ fontSize: 26 }}>Vendre et recevoir</T>
+        <Card style={{ paddingHorizontal: 16 }}>
+          <RowLink icon="tag" label="Espace vendeur" sub="Mettre en vente, annonces, gains" onPress={() => router.push('/seller')} />
+          <Divider />
+          <RowLink icon="truck" label="Livres à recevoir" sub="Suivi des livres physiques achetés" onPress={() => router.push('/account/deliveries')} />
+        </Card>
+      </View>
+
+      <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
         <T serif accessibilityRole="header" style={{ fontSize: 26 }}>Notifications</T>
         <Card style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
           <Switch value label="Commandes et compte" sub="Toujours actif, nécessaire au service" disabled />

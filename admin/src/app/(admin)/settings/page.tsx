@@ -16,6 +16,7 @@ interface Settings {
   salesTermsUrl: string | null;
   privacyUrl: string | null;
   legalNoticeUrl: string | null;
+  commissionPercent: number;
 }
 
 const MODES: [Mode, string][] = [
@@ -85,6 +86,14 @@ export default function SettingsPage() {
             <div className="field">
               <label htmlFor="web">Adresse du site d’achat (mode « app de lecture »)</label>
               <input id="web" className="input" type="url" value={s.webCheckoutUrl ?? ''} onChange={(e) => set('webCheckoutUrl', str(e.target.value))} placeholder="https://" />
+            </div>
+          </section>
+          <section className="card grid" style={{ gap: 14 }}>
+            <h2 style={{ margin: 0 }}>Marketplace</h2>
+            <div className="field">
+              <label htmlFor="commission">Commission sur les ventes des vendeurs (%)</label>
+              <input id="commission" className="input" inputMode="decimal" value={s.commissionPercent} onChange={(e) => set('commissionPercent', Number(e.target.value.replace(',', '.')) || 0)} style={{ maxWidth: 200 }} />
+              <span className="hint">Calculée sur le prix du livre, hors frais de livraison. Les livres de la plateforme n’en ont pas. Entre 0 et 50 %.</span>
             </div>
           </section>
           <section className="card grid" style={{ gap: 14 }}>

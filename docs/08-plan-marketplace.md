@@ -120,3 +120,40 @@ Implémentations : `FakeMobileMoney` (simulation : le paiement réussit après q
 8. Les **e-books actuels** de l'admin deviennent-ils les annonces d'un vendeur « Folio » ?
 9. **Panier multi-vendeurs** autorisé, ou un vendeur par commande ?
 10. **Vérification d'identité** des vendeurs (KYC) avant de recevoir de l'argent ?
+
+## 8. Décisions du propriétaire (23 octobre 2026)
+
+| # | Décision | Mise en œuvre |
+|---|---|---|
+| 1 | Commission sur le **prix seul** | 2 % par défaut, réglable dans Admin → Paramètres (`commissionPercent`) ; les frais de livraison reviennent entièrement au vendeur |
+| 2 | Vendeur payé **tout de suite** | Les gains passent « disponibles » dès la confirmation du paiement ; versement automatique en Mobile Money (simulé tant que l'agrégateur n'est pas branché), virement bancaire fait par l'admin |
+| 3 | **Devises EUR, KMF, MGA**, choisies par le vendeur | Pas de conversion : un panier ne contient qu'une devise ; Mobile Money proposé seulement si la devise correspond au pays (KMF ↔ Comores, MGA ↔ Madagascar) ; carte pour l'EUR |
+| 4 | **Pas de modération** | Publication directe ; l'admin peut archiver (retirer) n'importe quelle annonce |
+| 5 | **Litiges** tranchés par l'admin | L'admin peut rembourser ; si le vendeur a déjà été payé, une ligne de gain négative (dette) est imputée sur ses gains suivants |
+| 6 | Agrégateur Mobile Money **pas encore branchable** | Mode simulation complet ; adaptateur réel à ajouter plus tard derrière `MobileMoneyProvider` |
+| 7 | Virements **bancaires manuels** | Admin → Versements : liste des sommes dues, IBAN déchiffré pour l'admin seul (journalisé), bouton « Marquer comme versé » |
+| 8 | « Ça dépend » | Les e-books actuels restent des livres **de la plateforme** (`seller_id` vide, sans commission) ; l'admin peut continuer à en créer |
+| 9 | Panier **multi-vendeurs** ; un livre numérique s'achète par un nombre illimité de clients, chacun sa copie | Commande découpée par vendeur (expéditions et gains séparés) ; un acheteur prend un exemplaire par livre |
+| 10 | Pas de vérification d'identité | — |
+
+Choix technique : la table `ebooks` est conservée (elle représente désormais tout « livre ») et reçoit `seller_id`, `kind`, `language`, `condition`, `stock` ; pas de renommage pour ne pas casser l'existant.
+
+## 9. Mise en œuvre (23 octobre 2026)
+
+**Migrations** : `20261023000001_marketplace_enums.sql` (types) et `20261023000002_marketplace.sql` (colonnes vendeur, type, langue, état et stock sur `ebooks` ; tables `ebook_shipping_options`, `shipping_addresses`, `shipments`, `seller_payout_accounts`, `seller_earnings`, `payouts`, `payment_settings_log` ; RLS ; fonctions vendeur, acheteur, admin et paiement).
+
+**Fonctions Edge** : `checkout` (carte ou Mobile Money), `payment-webhook` (`?provider=mobile_money` pour les callbacks opérateur), `payment-status`, `fake-mobile-money` (simulation), `payout-accounts` (chiffrement AES-256-GCM), `seller` (fichiers et suppression), `payouts` (versements Mobile Money, appelée par pg_cron avec `x-cron-secret`), `admin` (action `reveal-payout-account`, journalisée).
+
+**Variables d'environnement** (secrets des fonctions Edge) :
+
+| Variable | Rôle |
+|---|---|
+| `MOBILE_MONEY_PROVIDER` | `fake` (simulation) tant que les contrats opérateurs ne sont pas signés |
+| `FAKE_MM_SECRET` | Secret HMAC des callbacks simulés |
+| `FAKE_MM_AUTO_CONFIRM_SECONDS` | Délai de confirmation automatique en simulation (`-1` = jamais) |
+| `PAYOUT_ENCRYPTION_KEY` | 32 octets en base64 (`openssl rand -base64 32`) ; à sauvegarder : sans elle, les IBAN et numéros ne sont plus lisibles |
+| `CRON_SECRET` | Déjà utilisé par `send-emails`, protège aussi `payouts` |
+
+**Tâche planifiée à créer** : appel de `payouts` (par exemple toutes les heures) avec l'en-tête `x-cron-secret`, comme pour `send-emails`.
+
+**Tests** : `supabase/tests/marketplace.test.mjs` (17 tests : vente, filtre, Mobile Money, interrupteurs admin, stock concurrent, accès aux livres numériques, chiffrement, commission, versements, remboursement).

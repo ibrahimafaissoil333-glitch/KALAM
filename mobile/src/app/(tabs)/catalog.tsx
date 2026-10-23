@@ -6,7 +6,7 @@ import { api, Ebook, errorMessage } from '@/lib/api';
 import { money } from '@/lib/format';
 import { useStore } from '@/lib/store';
 import { useQuery } from '@/lib/use-query';
-import { Button, Chip, Cover, EmptyState, ErrorBanner, H1, IconButton, LinkButton, Skeleton, T } from '@/ui/components';
+import { Button, Chip, Cover, EmptyState, ErrorBanner, H1, IconButton, KindBadge, LinkButton, Skeleton, T } from '@/ui/components';
 import { Icon } from '@/ui/icons';
 import { color, font, gutter } from '@/ui/theme';
 
@@ -14,6 +14,12 @@ const SORTS = [
   ['new', 'Nouveautés'],
   ['title', 'Titre A → Z'],
   ['author', 'Auteur A → Z'],
+] as const;
+
+const KINDS = [
+  ['', 'Tous les livres'],
+  ['DIGITAL', 'Numériques'],
+  ['PHYSICAL', 'Physiques'],
 ] as const;
 
 interface Page {
@@ -31,6 +37,7 @@ export default function CatalogScreen() {
   const [debounced, setDebounced] = useState('');
   const [category, setCategory] = useState(params.category ?? '');
   const [sort, setSort] = useState(0);
+  const [kind, setKind] = useState<string>('');
   const [items, setItems] = useState<Ebook[] | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -56,7 +63,7 @@ export default function CatalogScreen() {
     setLoading(true);
     setError(null);
     try {
-      const qs = new URLSearchParams({ sort: SORTS[sort][0], page: String(p), pageSize: '20', ...(debounced && { q: debounced }), ...(category && { category }) });
+      const qs = new URLSearchParams({ sort: SORTS[sort][0], page: String(p), pageSize: '20', ...(debounced && { q: debounced }), ...(category && { category }), ...(kind && { kind }) });
       const res = await api<Page>(`catalog/ebooks?${qs}`);
       if (n !== seq.current) return;
       setItems((prev) => (p === 1 ? res.items : [...(prev ?? []), ...res.items]));
@@ -72,12 +79,13 @@ export default function CatalogScreen() {
   useEffect(() => {
     load(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced, category, sort]);
+  }, [debounced, category, sort, kind]);
 
   const catName = categories?.find((c) => c.slug === category)?.name;
-  const filtered = !!category || !!q.trim();
+  const filtered = !!category || !!q.trim() || !!kind;
   const clear = () => {
     setQ('');
+    setKind('');
     setCategory('');
   };
 
@@ -88,7 +96,7 @@ export default function CatalogScreen() {
           <View>
             <H1>Catalogue</H1>
             <T muted style={{ fontSize: 14, marginTop: 6 }} accessibilityLiveRegion="polite">
-              {total} e-book{total > 1 ? 's' : ''}{catName ? ` · ${catName}` : ''}
+              {total} livre{total > 1 ? 's' : ''}{catName ? ` · ${catName}` : ''}
             </T>
           </View>
           <IconButton icon="cart" label="Panier" badge={cart.items.length} onPress={() => router.navigate('/cart')} />
@@ -111,7 +119,10 @@ export default function CatalogScreen() {
           />
         </View>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: gutter, paddingTop: 16 }}>
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: gutter, paddingTop: 16 }} accessibilityRole="radiogroup" accessibilityLabel="Type de livre">
+        {KINDS.map(([k, l]) => <Chip key={k} label={l} selected={kind === k} onPress={() => setKind(k)} />)}
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: gutter, paddingTop: 12 }}>
         <Chip label="Tous" selected={!category} onPress={() => setCategory('')} />
         {categories?.map((c) => <Chip key={c.slug} label={c.name} selected={category === c.slug} onPress={() => setCategory(c.slug)} />)}
       </ScrollView>
@@ -164,6 +175,7 @@ export default function CatalogScreen() {
         >
           <Cover title={e.title} author={e.author} cover={e.cover} width={168} style={{ width: '100%', height: 250 }} />
           <View style={{ gap: 3 }}>
+            <KindBadge kind={e.kind} style={{ marginBottom: 2 }} />
             <T weight="bold" style={{ fontSize: 15, lineHeight: 19 }}>{e.title}</T>
             <T muted style={{ fontSize: 13 }}>{e.author}</T>
             <T weight="bold" style={{ fontSize: 14, marginTop: 4, color: e.owned ? color.successText : color.ink }}>{e.owned ? 'Acheté' : money(e.priceCents, e.currency)}</T>

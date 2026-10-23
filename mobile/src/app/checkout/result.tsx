@@ -49,6 +49,8 @@ export default function CheckoutResult() {
   }, [id, refreshCart]);
 
   const status = order?.status;
+  const mobileMoney = order?.paymentMethod === 'MOBILE_MONEY';
+  const hasDigital = order?.items.some((i) => i.kind !== 'PHYSICAL') ?? true;
   const hero = (icon: IconName, bg: string, ring: string, title: string, sub?: React.ReactNode) => (
     <View style={{ alignItems: 'center', gap: 16, paddingTop: 32 }}>
       <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 0 10px ${ring}` }}>
@@ -83,7 +85,7 @@ export default function CheckoutResult() {
               {order.items.map((i) => (
                 <View key={i.ebookId} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: color.divider }}>
                   <T weight="bold" style={{ flex: 1, fontSize: 15 }}>{i.title}</T>
-                  <StatusPill status="OK" />
+                  {i.kind === 'PHYSICAL' ? <T muted weight="semibold" style={{ fontSize: 13 }}>Expédié par le vendeur</T> : <StatusPill status="OK" />}
                 </View>
               ))}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 }}>
@@ -102,7 +104,9 @@ export default function CheckoutResult() {
             ))}
             <Card style={{ padding: 16, gap: 8 }}>
               <T weight="bold" style={{ fontSize: 15 }}>Causes fréquentes</T>
-              {['Carte refusée ou expirée', 'Plafond de paiement atteint', 'Validation bancaire (3-D Secure) non terminée', 'Connexion interrompue pendant le paiement'].map((c) => (
+              {(mobileMoney
+                ? ['Demande refusée ou non validée sur le téléphone', 'Solde Mobile Money insuffisant', 'Délai de confirmation dépassé', 'Numéro non inscrit chez l’opérateur']
+                : ['Carte refusée ou expirée', 'Plafond de paiement atteint', 'Validation bancaire (3-D Secure) non terminée', 'Connexion interrompue pendant le paiement']).map((c) => (
                 <T key={c} muted style={{ fontSize: 14 }}>• {c}</T>
               ))}
             </Card>
@@ -113,7 +117,7 @@ export default function CheckoutResult() {
           <>
             {hero('clock', color.warningText, color.warningSoft, 'Paiement en vérification', (
               <T muted style={{ textAlign: 'center', lineHeight: 24 }}>
-                Nous attendons la confirmation de notre prestataire. Vos e-books apparaîtront dans votre bibliothèque dès qu’elle sera reçue. Aucun accès n’est activé avant.
+                Nous attendons la confirmation {mobileMoney ? 'de votre opérateur Mobile Money' : 'de notre prestataire'}. Votre commande sera validée dès qu’elle sera reçue. Aucun accès n’est activé avant.
               </T>
             ))}
             {!gaveUp ? (
@@ -133,7 +137,11 @@ export default function CheckoutResult() {
       <View style={{ padding: gutter, paddingBottom: Math.max(insets.bottom, 20), gap: 10 }}>
         {status === 'PAID' && (
           <>
-            <Button label="Ouvrir ma bibliothèque" variant="accent" icon="books" onPress={() => router.dismissTo('/library')} />
+            {hasDigital ? (
+              <Button label="Ouvrir ma bibliothèque" variant="accent" icon="books" onPress={() => router.dismissTo('/library')} />
+            ) : (
+              <Button label="Suivre ma commande" variant="accent" icon="truck" onPress={() => router.replace('/account/orders')} />
+            )}
             <Button label="Continuer mes achats" variant="ghost" onPress={() => router.dismissTo('/')} />
           </>
         )}

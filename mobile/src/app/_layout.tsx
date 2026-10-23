@@ -27,6 +27,7 @@ function Root() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="reader/[id]" options={{ animation: 'fade', contentStyle: { backgroundColor: color.readerPaper } }} />
         <Stack.Screen name="checkout/result" options={{ gestureEnabled: false, animation: 'fade' }} />
+        <Stack.Screen name="checkout/mobile-money" options={{ gestureEnabled: false, animation: 'fade' }} />
       </Stack>
     </>
   );

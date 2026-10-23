@@ -29,6 +29,7 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-font",
+      ["expo-image-picker", { "photosPermission": "Folio accède à vos photos pour la couverture de vos livres mis en vente." }],
       [
         "expo-splash-screen",
         {

@@ -4,7 +4,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 export type IconName =
   | 'user' | 'search' | 'arrow' | 'back' | 'chevron' | 'cart' | 'trash' | 'info' | 'eye' | 'eyeOff' | 'shield'
   | 'lock' | 'check' | 'close' | 'books' | 'mail' | 'download' | 'home' | 'grid' | 'sort' | 'alert' | 'clock'
-  | 'list' | 'text' | 'logout' | 'help' | 'doc' | 'device' | 'bell' | 'offline';
+  | 'list' | 'text' | 'logout' | 'help' | 'doc' | 'device' | 'bell' | 'offline' | 'tag' | 'truck' | 'wallet' | 'phone' | 'plus' | 'edit';
 
 export function Icon({ name, size = 22, color = '#182840', stroke = 1.8 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
   const p = { fill: 'none', stroke: color, strokeWidth: stroke, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -39,6 +39,12 @@ export function Icon({ name, size = 22, color = '#182840', stroke = 1.8 }: { nam
     device: <><Rect x="7" y="3" width="10" height="18" rx="2" {...p} /><Path d="M11 18h2" {...p} /></>,
     bell: <><Path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" {...p} /><Path d="M10 20a2 2 0 0 0 4 0" {...p} /></>,
     offline: <><Path d="M2 8.5a15 15 0 0 1 20 0" {...p} /><Path d="M5.5 12a10 10 0 0 1 13 0" {...p} /><Path d="M9 15.5a5 5 0 0 1 6 0" {...p} /><Path d="M3 3l18 18" {...p} /></>,
+    tag: <><Path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z" {...p} /><Circle cx="8.5" cy="8.5" r="1.5" {...p} /></>,
+    truck: <><Path d="M2.5 6h11v10h-11z" {...p} /><Path d="M13.5 9.5h4l3 3.5V16h-7" {...p} /><Circle cx="7" cy="17.5" r="1.8" {...p} /><Circle cx="17" cy="17.5" r="1.8" {...p} /></>,
+    wallet: <><Rect x="3" y="6" width="18" height="13" rx="2" {...p} /><Path d="M3 9.5h18" {...p} /><Path d="M16 14h2" {...p} /><Path d="M6 6l9-3 1.5 3" {...p} /></>,
+    phone: <><Rect x="7" y="2.5" width="10" height="19" rx="2.2" {...p} /><Path d="M11 18.5h2" {...p} /></>,
+    plus: <><Path d="M12 5v14" {...p} /><Path d="M5 12h14" {...p} /></>,
+    edit: <><Path d="M4 20h4L19 9l-4-4L4 16z" {...p} /><Path d="m13.5 6.5 4 4" {...p} /></>,
   };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" color={color} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

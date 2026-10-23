@@ -111,7 +111,7 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
     return data as T;
   }
   if (route === 'GET catalog/ebooks') {
-    return rpc('search_ebooks', { p_q: qs.get('q'), p_category: qs.get('category'), p_sort: qs.get('sort') ?? 'new', p_page: Number(qs.get('page') ?? 1), p_page_size: Number(qs.get('pageSize') ?? 20) });
+    return rpc('search_ebooks', { p_q: qs.get('q'), p_category: qs.get('category'), p_sort: qs.get('sort') ?? 'new', p_page: Number(qs.get('page') ?? 1), p_page_size: Number(qs.get('pageSize') ?? 20), p_kind: qs.get('kind') });
   }
   if ((m = p.match(/^catalog\/ebooks\/([^/]+)\/preview$/))) return edge('preview', { slug: decodeURIComponent(m[1]) });
   if ((m = p.match(/^catalog\/ebooks\/([^/]+)$/))) return rpc('ebook_detail', { p_slug: decodeURIComponent(m[1]) });
@@ -140,6 +140,34 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   if (route === 'POST cart/merge') return rpc('cart_merge', { p_ebooks: b.ebookIds ?? [] });
 
   if (route === 'POST orders') return edge('checkout', b, init.headers);
+  if ((m = p.match(/^orders\/(.+)\/status$/))) return edge('payment-status', { orderId: m[1] });
+  if (route === 'GET me/physical-orders') return rpc('my_physical_orders');
+  if ((m = p.match(/^shipments\/(.+)\/delivered$/))) return rpc('confirm_delivery', { p_shipment: m[1] });
+
+  // Adresses de livraison
+  if (route === 'GET me/addresses') return rpc('my_addresses');
+  if (route === 'POST me/addresses') return rpc('save_address', { p: b });
+  if ((m = p.match(/^me\/addresses\/(.+)$/)) && method === 'DELETE') return rpc('delete_address', { p_id: m[1] });
+
+  // Moyens de réception des gains (coordonnées chiffrées par la fonction Edge)
+  if (route === 'GET me/payout-accounts') return rpc('my_payout_accounts');
+  if (route === 'POST me/payout-accounts') return edge('payout-accounts', b);
+  if ((m = p.match(/^me\/payout-accounts\/(.+)\/default$/))) return rpc('set_default_payout_account', { p_id: m[1] });
+  if ((m = p.match(/^me\/payout-accounts\/(.+)$/)) && method === 'DELETE') return rpc('delete_payout_account', { p_id: m[1] });
+
+  // Espace vendeur
+  if (route === 'GET seller/dashboard') return rpc('seller_dashboard');
+  if (route === 'GET seller/ebooks') return rpc('seller_ebooks');
+  if (route === 'POST seller/ebooks') return rpc('seller_save_ebook', { p_id: null, p: b });
+  if ((m = p.match(/^seller\/ebooks\/([^/]+)\/status$/))) return rpc('seller_set_status', { p_id: m[1], p_action: b.action });
+  if ((m = p.match(/^seller\/ebooks\/([^/]+)\/shipping$/))) return rpc('seller_set_shipping', { p_id: m[1], p: b.options });
+  if ((m = p.match(/^seller\/ebooks\/([^/]+)$/))) {
+    if (method === 'GET') return rpc('seller_ebook', { p_id: m[1] });
+    if (method === 'PATCH') return rpc('seller_save_ebook', { p_id: m[1], p: b });
+    if (method === 'DELETE') return edge('seller', { action: 'delete', id: m[1] });
+  }
+  if (route === 'GET seller/shipments') return rpc('seller_shipments');
+  if ((m = p.match(/^seller\/shipments\/(.+)\/shipped$/))) return rpc('seller_mark_shipped', { p_shipment: m[1], p_tracking: b.tracking ?? null });
   if (route === 'GET orders') return rpc('my_orders');
   if ((m = p.match(/^orders\/(.+)$/))) return rpc('my_order', { p_id: m[1] });
 
@@ -149,6 +177,28 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   if ((m = p.match(/^library\/(.+)\/progress$/))) return rpc('save_progress', { p_ebook: m[1], p_chapter: b.chapterIndex, p_block: b.blockIndex, p_percent: b.percent });
 
   throw new ApiError(404, `Route inconnue : ${seg.join('/')}`);
+}
+
+/** Envoi d'une couverture ou du fichier du livre (formulaire multipart vers la fonction Edge « seller »). */
+export async function uploadSellerFile(ebookId: string, kind: 'cover' | 'main', file: { uri: string; name: string; mimeType: string }) {
+  const { data } = await supabase.auth.getSession();
+  const form = new FormData();
+  form.append('ebookId', ebookId);
+  form.append('kind', kind);
+  form.append('file', { uri: file.uri, name: file.name, type: file.mimeType } as unknown as Blob);
+  let res: Response;
+  try {
+    res = await fetch(`${SUPABASE_URL}/functions/v1/seller`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${data.session?.access_token ?? SUPABASE_KEY}` },
+      body: form,
+    });
+  } catch {
+    throw new NetworkError();
+  }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiError(res.status, json.message ?? 'Envoi impossible. Réessayez.');
+  return withCovers(json as SellerEbook);
 }
 
 /** Changement de mot de passe : le mot de passe actuel est vérifié avant la mise à jour. */
@@ -180,6 +230,24 @@ export interface Ebook {
   downloadAllowed: boolean;
   cover: { bg: string; fg: string; tint: string; url: string | null };
   owned: boolean;
+  kind: ProductKind;
+  language: string;
+  condition: BookCondition | null;
+  stock: number | null;
+  inStock: boolean;
+  seller: { id: string; name: string } | null;
+  shipping: ShippingOption[];
+}
+
+export type ProductKind = 'PHYSICAL' | 'DIGITAL';
+export type BookCondition = 'NEW' | 'VERY_GOOD' | 'GOOD' | 'WORN';
+export type ShippingMode = 'HAND' | 'POST' | 'COURIER';
+export interface ShippingOption {
+  id: string;
+  mode: ShippingMode;
+  priceCents: number;
+  countries: string[];
+  delayDays: number | null;
 }
 
 export interface LibraryItem extends Ebook {
@@ -211,7 +279,57 @@ export interface Order {
   currency: string;
   createdAt: string;
   paidAt: string | null;
-  items: { ebookId: string; title: string; priceCents: number }[];
+  paymentMethod?: 'CARD' | 'MOBILE_MONEY';
+  items: { ebookId: string; title: string; priceCents: number; kind?: ProductKind; shippingCents?: number; seller?: { id: string; name: string } | null }[];
+  shipments?: Shipment[];
+  shippingAddress?: Address | null;
+}
+
+export interface Shipment {
+  id: string;
+  status: 'TO_SHIP' | 'SHIPPED' | 'DELIVERED' | 'CANCELED';
+  tracking: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  seller: { id: string; name: string } | null;
+}
+
+export interface Address {
+  id: string;
+  fullName: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  postalCode: string | null;
+  country: string;
+  phone: string | null;
+}
+
+export interface MobileMoneyCountry {
+  code: string;
+  name: string;
+  currency: string;
+  dialCode: string;
+  operators: { code: string; label: string }[];
+}
+
+export interface PayoutAccount {
+  id: string;
+  kind: 'BANK' | 'MOBILE_MONEY';
+  country: string;
+  operator: string | null;
+  holderName: string;
+  bankName: string | null;
+  masked: string;
+  isDefault: boolean;
+}
+
+/** Annonce vue par son vendeur (statut, fichiers, conditions de mise en vente). */
+export interface SellerEbook extends Ebook {
+  status: 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED';
+  sales: number;
+  files: { id: string; kind: 'COVER' | 'MAIN' | 'CONTENT'; mimeType: string; originalName: string | null }[];
+  publishable: string[];
 }
 
 export interface PublicConfig {
@@ -220,4 +338,5 @@ export interface PublicConfig {
   webCheckoutUrl: string | null;
   supportEmail: string | null;
   legal: { terms: string | null; salesTerms: string | null; privacy: string | null; legalNotice: string | null };
+  mobileMoney?: { enabled: boolean; countries: MobileMoneyCountry[] };
 }

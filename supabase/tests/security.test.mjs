@@ -84,7 +84,7 @@ describe('Sécurité et administration', () => {
   it('CA-24 / CA-27 : création, envoi EPUB, publication et journal', async () => {
     const admin = await env.admin();
     const created = (await admin.c.rpc('admin_save_ebook', { p_id: null, p: { title: 'Nouveau livre', author: 'Auteur', category: 'Roman', description: 'Texte' } })).data;
-    assert.deepEqual([...created.publishable].sort(), ['Contenu lisible non extrait (EPUB requis pour la lecture dans l’app)', 'Fichier principal manquant', 'Prix à définir'].sort());
+    assert.deepEqual([...created.publishable].sort(), ['Fichier du livre manquant (PDF ou EPUB)', 'Prix à définir'].sort());
     assert.match((await admin.c.rpc('admin_set_ebook_status', { p_id: created.id, p_action: 'publish' })).error.message, /Publication impossible/);
     await admin.c.rpc('admin_save_ebook', { p_id: created.id, p: { priceCents: 990 } });
 

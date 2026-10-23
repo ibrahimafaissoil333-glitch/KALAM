@@ -11,6 +11,7 @@ const FILTERS = [
   ['', 'Tous'],
   ['DRAFT', 'Brouillons'],
   ['PUBLISHED', 'Publiés'],
+  ['PAUSED', 'En pause'],
   ['ARCHIVED', 'Archivés'],
 ] as const;
 
@@ -56,6 +57,8 @@ export default function EbooksPage() {
           <thead>
             <tr>
               <th>E-book</th>
+              <th>Type</th>
+              <th>Vendeur</th>
               <th>Catégorie</th>
               <th className="num">Prix</th>
               <th>Statut</th>
@@ -80,6 +83,8 @@ export default function EbooksPage() {
                     </div>
                   </div>
                 </td>
+                <td>{e.kind === 'PHYSICAL' ? <span className="pill p-wait">Physique{e.stock !== null ? ` · ${e.stock}` : ''}</span> : <span className="pill p-ref">Numérique</span>}</td>
+                <td>{e.seller?.name ?? <span className="muted">Plateforme</span>}</td>
                 <td>{e.category?.name ?? <span className="muted">—</span>}</td>
                 <td className="num">{e.priceCents === null ? <span className="pill p-wait">À définir</span> : money(e.priceCents, e.currency)}</td>
                 <td>

@@ -439,3 +439,27 @@ export function Logo({ height = 40, withName, name = 'Folio' }: { height?: numbe
     </View>
   );
 }
+
+/** Badge « Physique » / « Numérique » sur les cartes et fiches de livres. */
+export function KindBadge({ kind, style }: { kind?: 'PHYSICAL' | 'DIGITAL'; style?: StyleProp<ViewStyle> }) {
+  const physical = kind === 'PHYSICAL';
+  return (
+    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: physical ? color.warningSoft : color.accentSoft }, style]} accessibilityLabel={physical ? 'Livre physique' : 'Livre numérique'}>
+      <Icon name={physical ? 'books' : 'download'} size={12} color={physical ? color.warningText : color.accentText} stroke={2} />
+      <T weight="bold" style={{ fontSize: 11, color: physical ? color.warningText : color.accentText }}>{physical ? 'Physique' : 'Numérique'}</T>
+    </View>
+  );
+}
+
+/** Choix exclusif sous forme de puces (formulaires). */
+export function Choice<V extends string>({ label, value, options, onChange, error }: { label: string; value: V | null | undefined; options: readonly (readonly [V, string])[]; onChange: (v: V) => void; error?: string }) {
+  return (
+    <View style={{ gap: 8 }} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      <T weight="semibold" style={{ fontSize: 14 }}>{label}</T>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {options.map(([v, l]) => <Chip key={v} label={l} selected={value === v} onPress={() => onChange(v)} />)}
+      </View>
+      {error && <T style={{ fontSize: 13, color: color.dangerText }} accessibilityLiveRegion="polite">{error}</T>}
+    </View>
+  );
+}

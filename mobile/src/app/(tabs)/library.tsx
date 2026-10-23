@@ -1,4 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, TextInput, View } from 'react-native';
 import { api, errorMessage, LibraryItem, BookContent } from '@/lib/api';
@@ -29,6 +30,21 @@ export default function LibraryScreen() {
   const [tab, setTab] = useState<Tab>('all');
   const [q, setQ] = useState('');
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
+
+  /** Livre PDF : ouvert via une URL signée de 5 minutes, réservée à l'acheteur. */
+  const openFile = async (it: LibraryItem) => {
+    setOpening(it.id);
+    setError(null);
+    try {
+      const { url } = await api<{ url: string }>(`library/${it.id}/download-url`);
+      await WebBrowser.openBrowserAsync(url);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setOpening(null);
+    }
+  };
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -176,14 +192,17 @@ export default function LibraryScreen() {
               {isNew && <Tag label="Nouveau" tone="gold" />}
               <T weight="bold">{it.title}</T>
               <T muted style={{ fontSize: 14 }}>{it.author}</T>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }} accessibilityLabel={`Progression : ${p} %`}>
+              {it.readable && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }} accessibilityLabel={`Progression : ${p} %`}>
                 <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: color.border }}>
                   <View style={{ width: `${p}%`, height: 4, borderRadius: 2, backgroundColor: color.accent }} />
                 </View>
                 <T muted weight="semibold" style={{ fontSize: 12 }}>{p} %</T>
-              </View>
+              </View>}
+              {!it.readable && it.downloadAllowed && <T muted style={{ fontSize: 13 }}>{it.format ?? 'Fichier'} · à télécharger</T>}
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
-                <Button
+                {!it.readable && it.downloadAllowed ? (
+                  <Button label="Ouvrir le fichier" variant="accent" small icon="download" loading={opening === it.id} disabled={!online} onPress={() => openFile(it)} style={{ minHeight: 44 }} />
+                ) : <Button
                   label={p > 0 ? 'Reprendre' : 'Lire'}
                   variant="accent"
                   small
@@ -191,7 +210,7 @@ export default function LibraryScreen() {
                   accessibilityLabel={`${p > 0 ? 'Reprendre' : 'Lire'} ${it.title}`}
                   onPress={() => router.push({ pathname: '/reader/[id]', params: { id: it.id } })}
                   style={{ minHeight: 44 }}
-                />
+                />}
                 {off ? (
                   <Pressable onPress={() => removeDownload(it)} accessibilityRole="button" accessibilityLabel={`${it.title} est disponible hors ligne. Toucher pour le retirer de l’appareil`}>
                     <StatusPill status="OFFLINE" />

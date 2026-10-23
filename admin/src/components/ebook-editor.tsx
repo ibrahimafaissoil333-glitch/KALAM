@@ -209,6 +209,11 @@ export function EbookEditor({ id }: { id?: string }) {
         )}
       </PageHead>
 
+      {data?.seller && (
+        <div className="alert alert-warn" style={{ marginBottom: 16 }}>
+          Annonce de {data.seller.name} · {data.kind === 'PHYSICAL' ? `livre physique, stock ${data.stock ?? 0}` : 'livre numérique'}. Le vendeur gère son annonce ; vous pouvez la dépublier ou l’archiver en cas de problème.
+        </div>
+      )}
       {actionError && <div className="alert alert-ko" role="alert" style={{ marginBottom: 16 }}>{actionError}</div>}
       {data && data.publishable.length > 0 && data.status !== 'PUBLISHED' && (
         <div className="alert alert-warn" style={{ marginBottom: 16 }}>

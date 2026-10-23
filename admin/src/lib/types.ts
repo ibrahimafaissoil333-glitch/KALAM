@@ -14,7 +14,11 @@ export interface Ebook {
   downloadAllowed: boolean;
   publishedAt: string | null;
   cover: CoverData & { tint: string };
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'ARCHIVED';
+  kind: 'PHYSICAL' | 'DIGITAL';
+  condition: 'NEW' | 'VERY_GOOD' | 'GOOD' | 'WORN' | null;
+  stock: number | null;
+  seller: { id: string; name: string } | null;
   featured: boolean;
   updatedAt: string;
   sales: number;

@@ -27,7 +27,8 @@ export class Env {
   async reset() {
     await this.sql.query(`truncate public.cart_items, public.order_items, public.payments, public.payment_events, public.entitlements,
       public.download_events, public.reading_progress, public.orders, public.ebook_views, public.ebook_files, public.ebooks, public.categories,
-      public.devices, public.notification_prefs, public.audit_logs, public.email_outbox, public.settings cascade`);
+      public.devices, public.notification_prefs, public.audit_logs, public.email_outbox, public.settings, public.shipments, public.seller_earnings,
+      public.payouts, public.seller_payout_accounts, public.shipping_addresses, public.payment_settings_log, public.ebook_shipping_options cascade`);
     await this.sql.query(`delete from public.profiles; delete from auth.users;`);
   }
 
@@ -97,3 +98,9 @@ export async function rpcError(promise) {
   if (!error) throw new Error('Une erreur était attendue');
   return error;
 }
+
+/** Signature d'un callback Mobile Money simulé (même secret que la fonction Edge). */
+export function mmSign(raw, t = Math.floor(Date.now() / 1000)) {
+  return `t=${t},v1=${createHmac('sha256', fnEnv.FAKE_MM_SECRET).update(`${t}.${raw}`).digest('hex')}`;
+}
+export const CRON_SECRET = () => fnEnv.CRON_SECRET;

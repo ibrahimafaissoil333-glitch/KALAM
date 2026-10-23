@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError, Ebook, errorMessage } from '@/lib/api';
-import { money } from '@/lib/format';
+import { CONDITION_LABEL, LANGUAGES, money, SHIPPING_LABEL } from '@/lib/format';
 import { useStore } from '@/lib/store';
 import { useQuery } from '@/lib/use-query';
-import { Button, Card, Cover, EmptyState, ErrorBanner, IconButton, Skeleton, T, Tag, useToast } from '@/ui/components';
+import { Button, Card, Cover, EmptyState, ErrorBanner, IconButton, KindBadge, Skeleton, T, Tag, useToast } from '@/ui/components';
 import { Icon } from '@/ui/icons';
 import { color, gutter } from '@/ui/theme';
 
@@ -58,11 +58,20 @@ export default function EbookScreen() {
     }
   };
 
-  const facts = [
-    ['Format', e.format ?? 'À définir'],
-    ['Pages', e.pages ? String(e.pages) : '—'],
-    ['Lecture', 'Dans l’app'],
-  ];
+  const physical = e.kind === 'PHYSICAL';
+  const pdf = e.format === 'PDF';
+  const language = LANGUAGES.find(([c]) => c === e.language)?.[1] ?? e.language;
+  const facts = physical
+    ? [
+        ['État', e.condition ? CONDITION_LABEL[e.condition] : '—'],
+        ['Stock', e.inStock ? `${e.stock} dispo.` : 'Épuisé'],
+        ['Langue', language],
+      ]
+    : [
+        ['Format', e.format ?? 'À définir'],
+        ['Pages', e.pages ? String(e.pages) : '—'],
+        ['Lecture', pdf ? 'Téléchargement' : 'Dans l’app'],
+      ];
 
   return (
     <View style={{ flex: 1 }}>
@@ -77,9 +86,13 @@ export default function EbookScreen() {
           </View>
         </View>
         <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 12 }}>
-          {e.category && <Tag label={e.category.name} />}
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <KindBadge kind={e.kind} />
+            {e.category && <Tag label={e.category.name} />}
+          </View>
           <T serif accessibilityRole="header" style={{ fontSize: 38, lineHeight: 40 }}>{e.title}</T>
           <T>par <T weight="bold">{e.author}</T></T>
+          <T muted style={{ fontSize: 14 }}>Vendu par {e.seller?.name ?? 'Folio'}</T>
         </View>
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: gutter, paddingTop: 20 }}>
           {facts.map(([l, v]) => (
@@ -93,7 +106,28 @@ export default function EbookScreen() {
           <T weight="bold" accessibilityRole="header" style={{ fontSize: 17 }}>Description</T>
           <T style={{ lineHeight: 26, color: '#2E3040' }}>{e.description}</T>
         </View>
-        <View style={{ paddingHorizontal: gutter, paddingTop: 20 }}>
+        {physical && e.shipping.length > 0 && (
+          <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
+            <T weight="bold" accessibilityRole="header" style={{ fontSize: 17 }}>Livraison</T>
+            <Card style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
+              {e.shipping.map((s, i) => (
+                <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderTopWidth: i ? 1 : 0, borderTopColor: color.divider }}>
+                  <Icon name="truck" size={20} color={color.muted} />
+                  <View style={{ flex: 1 }}>
+                    <T weight="semibold" style={{ fontSize: 15 }}>{SHIPPING_LABEL[s.mode]}</T>
+                    {(s.delayDays !== null || s.countries.length > 0) && (
+                      <T muted style={{ fontSize: 13 }}>
+                        {[s.delayDays !== null && `sous ${s.delayDays} jour${s.delayDays > 1 ? 's' : ''}`, s.countries.length > 0 && s.countries.join(', ')].filter(Boolean).join(' · ')}
+                      </T>
+                    )}
+                  </View>
+                  <T weight="bold" style={{ fontSize: 15 }}>{s.priceCents ? money(s.priceCents, e.currency) : 'Gratuit'}</T>
+                </View>
+              ))}
+            </Card>
+          </View>
+        )}
+        {!physical && !pdf && <View style={{ paddingHorizontal: gutter, paddingTop: 20 }}>
           <Pressable
             onPress={() => router.push({ pathname: '/reader/[id]', params: { id: e.owned ? e.id : e.slug, preview: e.owned ? undefined : '1' } })}
             accessibilityRole="button"
@@ -108,12 +142,14 @@ export default function EbookScreen() {
             </View>
             <Icon name="chevron" color={color.muted} />
           </Pressable>
-        </View>
+        </View>}
       </ScrollView>
 
       <View style={{ backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.border, paddingTop: 14, paddingHorizontal: gutter, paddingBottom: Math.max(insets.bottom, 16), gap: 10 }}>
         {actionError && <ErrorBanner message={actionError} />}
-        {e.owned ? (
+        {e.owned && pdf ? (
+          <Button label="Voir dans ma bibliothèque" variant="accent" icon="books" onPress={() => router.navigate('/library')} />
+        ) : e.owned ? (
           <Button label="Lire maintenant" variant="accent" icon="books" onPress={() => router.push({ pathname: '/reader/[id]', params: { id: e.id } })} />
         ) : webOnly ? (
           // Mode « app de lecture » : pas de prix ni d'achat dans l'app (règles des stores).
@@ -130,13 +166,15 @@ export default function EbookScreen() {
                 <T muted weight="semibold" style={{ fontSize: 12 }}>Prix</T>
                 <T weight="bold" style={{ fontSize: 22 }}>{money(e.priceCents, e.currency)}</T>
               </View>
-              {inCart ? (
+              {!e.inStock ? (
+                <Button label="Épuisé" disabled style={{ flex: 1 }} />
+              ) : inCart ? (
                 <Button label="Dans le panier" icon="check" onPress={() => router.navigate('/cart')} style={{ flex: 1 }} />
               ) : (
                 <Button label="Ajouter au panier" variant="accent" icon="cart" loading={busy} onPress={() => add()} style={{ flex: 1 }} />
               )}
             </View>
-            <Button label="Acheter maintenant" variant="ghost" small disabled={busy} onPress={() => add('checkout')} />
+            {e.inStock && <Button label="Acheter maintenant" variant="ghost" small disabled={busy} onPress={() => add('checkout')} />}
           </>
         )}
       </View>

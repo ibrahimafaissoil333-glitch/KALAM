@@ -77,6 +77,14 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   }
   if (p === 'admin/stats') return rpc('admin_stats', { p_period: opt('period') ?? '30d' });
   if (p === 'admin/settings') return method === 'PUT' ? rpc('admin_put_settings', { p: b }) : rpc('admin_get_settings');
+  // Mobile Money : interrupteurs (réglage en base, sans redéploiement) et historique
+  if (p === 'admin/mobile-money') return method === 'PUT' ? rpc('admin_set_mobile_money', { p: b }) : rpc('admin_get_mobile_money');
+  if (p === 'admin/mobile-money/log') return rpc('admin_mobile_money_log');
+  // Versements aux vendeurs
+  if (p === 'admin/payouts/due') return rpc('admin_payouts_due');
+  if (p === 'admin/payouts') return rpc('admin_payouts');
+  if (p === 'admin/payouts/bank') return rpc('admin_mark_bank_payout', { p_seller: b.sellerId, p_currency: b.currency, p_reference: b.reference ?? null });
+  if ((m = p.match(/^admin\/payout-accounts\/([^/]+)\/reveal$/))) return adminFn({ action: 'reveal-payout-account', accountId: m[1] });
   if (p === 'admin/audit-logs') return rpc('admin_audit_logs', { p_page: Number(opt('page') ?? 1) });
 
   if (p === 'admin/ebooks' && method === 'GET') return rpc('admin_ebooks', { p_q: opt('q'), p_status: opt('status') });
