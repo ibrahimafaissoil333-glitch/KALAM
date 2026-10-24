@@ -51,7 +51,14 @@
           }
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#3B36E0"
+        }
+      ]
     ],
     "scheme": "folio",
     "extra": {

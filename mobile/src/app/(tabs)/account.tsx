@@ -5,7 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { api, errorMessage, Order } from '@/lib/api';
 import { money, plural, shortDate } from '@/lib/format';
 import { useStore } from '@/lib/store';
-import { Button, Card, Divider, EmptyState, ErrorBanner, RowLink, ScreenHeader, StatusPill, Switch, T, useToast } from '@/ui/components';
+import { Button, Card, Choice, Divider, EmptyState, ErrorBanner, RowLink, ScreenHeader, StatusPill, Switch, T, useToast } from '@/ui/components';
 import { useAppearance } from '@/ui/appearance';
 import { color, gutter, scheme } from '@/ui/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -148,16 +148,18 @@ export default function AccountScreen() {
 
 /** Thème clair / sombre (suit le téléphone) et mode verre. */
 function AppearanceSection() {
-  const { glass, setGlass } = useAppearance();
+  const { glass, setGlass, mode, setMode } = useAppearance();
   return (
     <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
       <T serif accessibilityRole="header" style={{ fontSize: 26 }}>Apparence</T>
       <Card style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
         <Switch value={glass} onChange={setGlass} label="Mode verre" sub="Surfaces translucides, comme sur iPhone" />
         <Divider />
-        <View style={{ paddingVertical: 12 }}>
-          <T weight="semibold" style={{ fontSize: 15 }}>Thème : {scheme === 'dark' ? 'sombre' : 'clair'}</T>
-          <T muted style={{ fontSize: 13 }}>Suit automatiquement le réglage clair ou sombre de votre téléphone.</T>
+        <View style={{ paddingVertical: 12, gap: 6 }}>
+          <Choice label="Thème" value={mode} options={[['auto', 'Automatique'], ['light', 'Clair'], ['dark', 'Sombre']] as const} onChange={setMode} />
+          <T muted style={{ fontSize: 13 }}>
+            {mode === 'auto' ? `Suit le réglage de votre téléphone (actuellement ${scheme === 'dark' ? 'sombre' : 'clair'}).` : mode === 'dark' ? 'Mode sombre activé.' : 'Mode clair activé.'}
+          </T>
         </View>
       </Card>
     </View>

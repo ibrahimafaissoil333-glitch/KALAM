@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { usePushNotifications } from '@/lib/push';
 import { StoreProvider, useStore } from '@/lib/store';
 import { AppearanceProvider } from '@/ui/appearance';
 import { ToastProvider } from '@/ui/components';
@@ -14,7 +15,8 @@ import { color, glass, scheme } from '@/ui/theme';
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 function Root() {
-  const { ready } = useStore();
+  const { ready, user } = useStore();
+  usePushNotifications(user?.id ?? null);
   const [fonts] = useFonts({ InstrumentSerif_400Regular, HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_600SemiBold, HankenGrotesk_700Bold });
   const show = ready && fonts;
   useEffect(() => {
@@ -26,10 +28,11 @@ function Root() {
   const navTheme = { ...base, colors: { ...base.colors, background: glass ? 'transparent' : color.paper, card: color.surface, text: color.ink, border: color.border, primary: color.accent } };
   return (
     <ThemeProvider value={navTheme}>
-      <StatusBar style="auto" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: glass ? 'transparent' : color.paper }, animation: 'slide_from_right' }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="reader/[id]" options={{ animation: 'fade', contentStyle: { backgroundColor: color.readerPaper } }} />
+        <Stack.Screen name="reader/pdf/[id]" options={{ animation: 'fade', contentStyle: { backgroundColor: color.readerPaper } }} />
         <Stack.Screen name="checkout/result" options={{ gestureEnabled: false, animation: 'fade' }} />
         <Stack.Screen name="checkout/mobile-money" options={{ gestureEnabled: false, animation: 'fade' }} />
       </Stack>

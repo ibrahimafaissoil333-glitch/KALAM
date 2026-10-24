@@ -1,5 +1,4 @@
 import { router, useFocusEffect } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, TextInput, View } from 'react-native';
 import { api, errorMessage, LibraryItem, BookContent } from '@/lib/api';
@@ -30,21 +29,8 @@ export default function LibraryScreen() {
   const [tab, setTab] = useState<Tab>('all');
   const [q, setQ] = useState('');
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [opening, setOpening] = useState<string | null>(null);
-
-  /** Livre PDF : ouvert via une URL signée de 5 minutes, réservée à l'acheteur. */
-  const openFile = async (it: LibraryItem) => {
-    setOpening(it.id);
-    setError(null);
-    try {
-      const { url } = await api<{ url: string }>(`library/${it.id}/download-url`);
-      await WebBrowser.openBrowserAsync(url);
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setOpening(null);
-    }
-  };
+  /** Livre PDF : lu dans le lecteur PDF intégré (aucun fichier téléchargé ni partageable). */
+  const openPdf = (it: LibraryItem) => router.push({ pathname: '/reader/pdf/[id]', params: { id: it.id, title: it.title } });
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -95,7 +81,7 @@ export default function LibraryScreen() {
       const content = await api<BookContent>(`library/${it.id}/content`);
       await saveOffline(content);
       setMeta(await offlineMeta());
-      toast('Téléchargé pour une lecture hors ligne');
+      toast('Disponible hors ligne, dans l’application');
     } catch (e) {
       toast(errorMessage(e));
     } finally {
@@ -176,8 +162,8 @@ export default function LibraryScreen() {
         ) : (
           <EmptyState
             icon={tab === 'offline' || !online ? 'download' : 'search'}
-            title={q ? 'Aucun résultat' : tab === 'offline' || !online ? 'Aucun livre téléchargé' : 'Aucune lecture en cours'}
-            text={tab === 'offline' || !online ? 'Touchez l’icône de téléchargement d’un livre pour le lire sans connexion.' : undefined}
+            title={q ? 'Aucun résultat' : tab === 'offline' || !online ? 'Aucun livre hors ligne' : 'Aucune lecture en cours'}
+            text={tab === 'offline' || !online ? 'Touchez l’icône d’un livre pour le garder dans l’application et le lire sans connexion. Il reste chiffré et n’est pas partageable.' : undefined}
           />
         )
       }
@@ -198,10 +184,10 @@ export default function LibraryScreen() {
                 </View>
                 <T muted weight="semibold" style={{ fontSize: 12 }}>{p} %</T>
               </View>}
-              {!it.readable && it.downloadAllowed && <T muted style={{ fontSize: 13 }}>{it.format ?? 'Fichier'} · à télécharger</T>}
+              {!it.readable && <T muted style={{ fontSize: 13 }}>PDF · lecture dans l’application</T>}
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', marginTop: 'auto', paddingTop: 8 }}>
-                {!it.readable && it.downloadAllowed ? (
-                  <Button label="Ouvrir le fichier" variant="accent" small icon="download" loading={opening === it.id} disabled={!online} onPress={() => openFile(it)} style={{ minHeight: 44 }} />
+                {!it.readable ? (
+                  <Button label="Lire" variant="accent" small icon="books" disabled={!online} onPress={() => openPdf(it)} style={{ minHeight: 44 }} />
                 ) : <Button
                   label={p > 0 ? 'Reprendre' : 'Lire'}
                   variant="accent"
@@ -217,7 +203,7 @@ export default function LibraryScreen() {
                   </Pressable>
                 ) : (
                   it.readable && online && (
-                    downloading === it.id ? <T muted style={{ fontSize: 13 }}>Téléchargement…</T> : <IconButton icon="download" label={`Télécharger ${it.title} pour le lire hors ligne`} onPress={() => download(it)} />
+                    downloading === it.id ? <T muted style={{ fontSize: 13 }}>Préparation…</T> : <IconButton icon="download" label={`Garder ${it.title} dans l’application pour le lire hors ligne`} onPress={() => download(it)} />
                   )
                 )}
               </View>

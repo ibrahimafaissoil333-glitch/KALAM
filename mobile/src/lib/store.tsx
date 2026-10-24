@@ -162,6 +162,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [startSession]);
 
   const logout = useCallback(async () => {
+    // Import différé : push.ts dépend d'api.ts, comme ce fichier.
+    await import('./push').then((m) => m.unregisterPush()).catch(() => undefined);
     await supabase.auth.signOut().catch(() => undefined);
     await resetLocal();
   }, [resetLocal]);

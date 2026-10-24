@@ -248,7 +248,7 @@ export default function SellerEdit() {
                   <Icon name="doc" color={color.accent} />
                   <View style={{ flex: 1 }}>
                     <T weight="semibold" style={{ fontSize: 15 }}>{file?.name ?? book?.files.find((x) => x.kind === 'MAIN')?.originalName ?? 'Choisir un PDF ou un EPUB'}</T>
-                    <T muted style={{ fontSize: 13 }}>100 Mo maximum · téléchargeable uniquement par les acheteurs</T>
+                    <T muted style={{ fontSize: 13 }}>100 Mo maximum · lisible uniquement dans l’app par les acheteurs</T>
                   </View>
                 </Pressable>
                 {errors.file && <T style={{ fontSize: 13, color: color.dangerText }}>{errors.file}</T>}

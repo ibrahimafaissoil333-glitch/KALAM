@@ -154,7 +154,7 @@ export default function SellerPage() {
               {s.payouts.map((p) => (
                 <tr key={p.id}>
                   <td>{date(p.paidAt ?? p.createdAt, true)}</td>
-                  <td>{p.method === 'BANK' ? 'Virement' : 'Mobile Money'}</td>
+                  <td>{p.method === 'BANK' ? 'Virement' : p.method === 'PAYPAL' ? 'PayPal' : 'Mobile Money'}</td>
                   <td className="num">{money(p.amountCents, p.currency)}</td>
                   <td><Status value={p.status} /></td>
                   <td>{p.reference ?? '—'}</td>

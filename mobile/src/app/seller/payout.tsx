@@ -22,8 +22,8 @@ const MM_COUNTRIES = [['KM', 'Comores'], ['MG', 'Madagascar']] as const;
 export default function PayoutScreen() {
   const { data, error, reload, setData } = useQuery<PayoutAccount[]>('me/payout-accounts');
   const toast = useToast();
-  const [adding, setAdding] = useState<'BANK' | 'MOBILE_MONEY' | null>(null);
-  const [f, setF] = useState({ holderName: '', country: 'KM', iban: '', bankName: '', operator: '', phone: '' });
+  const [adding, setAdding] = useState<'BANK' | 'MOBILE_MONEY' | 'PAYPAL' | null>(null);
+  const [f, setF] = useState({ holderName: '', country: 'KM', iban: '', bankName: '', operator: '', phone: '', email: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,6 +36,7 @@ export default function PayoutScreen() {
     const e: Record<string, string> = {};
     if (!f.holderName.trim()) e.holderName = 'Indiquez le nom du titulaire.';
     if (adding === 'BANK' && f.iban.replace(/\s/g, '').length < 14) e.iban = 'IBAN ou RIB incomplet.';
+    if (adding === 'PAYPAL' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email.trim())) e.email = 'Adresse e-mail PayPal invalide.';
     if (adding === 'MOBILE_MONEY') {
       if (!f.operator) e.operator = 'Choisissez l’opérateur.';
       if (!validMsisdn(f.country, f.phone)) e.phone = `Numéro invalide. Exemple : ${phoneExample(f.country)}`;
@@ -47,10 +48,12 @@ export default function PayoutScreen() {
     try {
       const body = adding === 'BANK'
         ? { kind: 'BANK', holderName: f.holderName, country: f.country, iban: f.iban, bankName: f.bankName }
-        : { kind: 'MOBILE_MONEY', holderName: f.holderName, country: f.country, operator: f.operator, phone: f.phone };
+        : adding === 'PAYPAL'
+          ? { kind: 'PAYPAL', holderName: f.holderName, country: f.country, email: f.email }
+          : { kind: 'MOBILE_MONEY', holderName: f.holderName, country: f.country, operator: f.operator, phone: f.phone };
       setData(await api<PayoutAccount[]>('me/payout-accounts', { method: 'POST', body }));
       setAdding(null);
-      setF({ holderName: '', country: 'KM', iban: '', bankName: '', operator: '', phone: '' });
+      setF({ holderName: '', country: 'KM', iban: '', bankName: '', operator: '', phone: '', email: '' });
       toast('Moyen de réception enregistré');
     } catch (err) {
       setActionError(errorMessage(err));
@@ -79,7 +82,7 @@ export default function PayoutScreen() {
       <ScreenHeader back title="Moyens de réception" sub="Où vous recevez l’argent de vos ventes." />
       <View style={{ paddingHorizontal: gutter, gap: 14 }}>
         {(error || actionError) && <ErrorBanner message={(error ?? actionError)!} onRetry={error ? reload : undefined} />}
-        <InfoNote icon="lock" tone="box">Vos coordonnées sont chiffrées et ne sont jamais affichées en entier. Mobile Money : versement automatique. Compte bancaire : virement effectué par l’équipe Kalam.</InfoNote>
+        <InfoNote icon="lock" tone="box">Vos coordonnées sont chiffrées et ne sont jamais affichées en entier. Mobile Money : versement automatique. Compte bancaire ou PayPal (ventes payées par carte ou PayPal) : versement effectué par l’équipe Kalam.</InfoNote>
 
         {!data ? <Skeleton h={80} /> : data.length > 0 && (
           <Card style={{ paddingHorizontal: 16 }}>
@@ -87,10 +90,10 @@ export default function PayoutScreen() {
               <View key={a.id}>
                 {i > 0 && <Divider />}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 }}>
-                  <Icon name={a.kind === 'BANK' ? 'wallet' : 'phone'} color={color.ink} />
+                  <Icon name={a.kind === 'MOBILE_MONEY' ? 'phone' : 'wallet'} color={color.ink} />
                   <View style={{ flex: 1 }}>
                     <T weight="semibold" style={{ fontSize: 15 }}>
-                      {a.kind === 'BANK' ? a.bankName || 'Compte bancaire' : OPERATOR_LABEL[a.operator ?? ''] ?? a.operator} · {a.masked}
+                      {a.kind === 'BANK' ? a.bankName || 'Compte bancaire' : a.kind === 'PAYPAL' ? 'PayPal' : OPERATOR_LABEL[a.operator ?? ''] ?? a.operator} · {a.masked}
                     </T>
                     <T muted style={{ fontSize: 13 }}>{a.holderName} · {COUNTRY_LABEL[a.country] ?? a.country}{a.isDefault ? ' · par défaut' : ''}</T>
                   </View>
@@ -106,10 +109,12 @@ export default function PayoutScreen() {
 
         {adding ? (
           <Card style={{ padding: 16, gap: 14 }}>
-            <T weight="bold" style={{ fontSize: 17 }}>{adding === 'BANK' ? 'Compte bancaire' : 'Mobile Money'}</T>
+            <T weight="bold" style={{ fontSize: 17 }}>{adding === 'BANK' ? 'Compte bancaire' : adding === 'PAYPAL' ? 'Compte PayPal' : 'Mobile Money'}</T>
             <TextField label="Nom du titulaire" value={f.holderName} onChangeText={set('holderName')} error={errors.holderName} autoComplete="name" />
-            <Choice label="Pays" value={f.country} options={adding === 'BANK' ? BANK_COUNTRIES : MM_COUNTRIES} onChange={(v) => setF({ ...f, country: v, operator: '' })} />
-            {adding === 'BANK' ? (
+            <Choice label="Pays" value={f.country} options={adding === 'MOBILE_MONEY' ? MM_COUNTRIES : BANK_COUNTRIES} onChange={(v) => setF({ ...f, country: v, operator: '' })} />
+            {adding === 'PAYPAL' ? (
+              <TextField label="E-mail du compte PayPal" value={f.email} onChangeText={set('email')} error={errors.email} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+            ) : adding === 'BANK' ? (
               <>
                 <TextField label="IBAN ou RIB" value={f.iban} onChangeText={set('iban')} error={errors.iban} autoCapitalize="characters" autoCorrect={false} placeholder="KM46 …" />
                 <TextField label="Banque (facultatif)" value={f.bankName} onChangeText={set('bankName')} />
@@ -129,6 +134,7 @@ export default function PayoutScreen() {
           <View style={{ gap: 10 }}>
             <Button label="Ajouter un numéro Mobile Money" variant="accent" icon="phone" onPress={() => setAdding('MOBILE_MONEY')} />
             <Button label="Ajouter un compte bancaire" variant="ghost" icon="wallet" onPress={() => setAdding('BANK')} />
+            <Button label="Ajouter un compte PayPal" variant="ghost" icon="wallet" onPress={() => setAdding('PAYPAL')} />
           </View>
         )}
       </View>

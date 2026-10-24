@@ -1,5 +1,5 @@
-// Coordonnées de paiement du vendeur (IBAN/RIB ou Mobile Money). Chiffrées ici avant d'être enregistrées :
-// la base ne contient jamais la valeur en clair, et l'app ne reçoit que les 4 derniers caractères.
+// Coordonnées de paiement du vendeur (IBAN/RIB, e-mail PayPal ou Mobile Money). Chiffrées ici avant d'être
+// enregistrées : la base ne contient jamais la valeur en clair, et l'app n'en reçoit qu'un aperçu masqué.
 import { check, handler, HttpError, json, serviceClient, userFromRequest } from '../_shared/http.ts';
 import { encryptSecret, validIban } from '../_shared/crypto.ts';
 import { normalizeMsisdn } from '../_shared/mobile-money.ts';
@@ -24,6 +24,11 @@ Deno.serve(handler(async (req) => {
     const value = iban ?? (/^\d{10}[A-Z0-9]{11}\d{2}$/.test(raw) ? raw : null);
     if (!value) throw new HttpError(400, 'IBAN ou RIB invalide. Vérifiez le numéro.');
     row = { kind: 'BANK', bank_name: text(b.bankName, 80) || null, operator: null, secret_ciphertext: await encryptSecret(value), last4: value.slice(-4) };
+  } else if (b.kind === 'PAYPAL') {
+    const email = text(b.email, 254).toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) throw new HttpError(400, 'Adresse e-mail PayPal invalide.');
+    const [name, domain] = email.split('@');
+    row = { kind: 'PAYPAL', operator: null, bank_name: 'PayPal', secret_ciphertext: await encryptSecret(email), last4: `${name.slice(0, 2)}•••@${domain}` };
   } else if (b.kind === 'MOBILE_MONEY') {
     const operator = text(b.operator, 20).toUpperCase();
     if (!OPERATORS[country]?.includes(operator)) throw new HttpError(400, 'Opérateur Mobile Money invalide pour ce pays.');
@@ -31,7 +36,7 @@ Deno.serve(handler(async (req) => {
     if (!msisdn) throw new HttpError(400, 'Numéro Mobile Money invalide pour ce pays.');
     row = { kind: 'MOBILE_MONEY', operator, bank_name: null, secret_ciphertext: await encryptSecret(msisdn), last4: msisdn.slice(-4) };
   } else {
-    throw new HttpError(400, 'Choisissez un compte bancaire ou Mobile Money.');
+    throw new HttpError(400, 'Choisissez un compte bancaire, PayPal ou Mobile Money.');
   }
 
   const db = serviceClient();

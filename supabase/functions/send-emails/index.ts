@@ -1,6 +1,8 @@
-// Envoie les e-mails en attente (table email_outbox). Appelée par pg_cron chaque minute en production.
+// Envoie les e-mails en attente (table email_outbox) et la notification téléphone associée, avec image.
+// Appelée par pg_cron chaque minute en production.
 // Pilotes : MAIL_DRIVER=resend (API HTTP) ou console (développement : journalisé puis marqué envoyé).
 import { env, handler, HttpError, json, serviceClient } from '../_shared/http.ts';
+import { sendPendingPushes } from '../_shared/push.ts';
 
 Deno.serve(handler(async (req) => {
   const secret = env('CRON_SECRET');
@@ -26,5 +28,6 @@ Deno.serve(handler(async (req) => {
       await db.from('email_outbox').update({ error: String(err).slice(0, 500) }).eq('id', m.id);
     }
   }
-  return json({ sent, pending: (batch?.length ?? 0) - sent });
+  const pushes = await sendPendingPushes(db);
+  return json({ sent, pending: (batch?.length ?? 0) - sent, pushes });
 }));

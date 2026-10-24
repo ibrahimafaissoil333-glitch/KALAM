@@ -70,7 +70,7 @@ export default function EbookScreen() {
     : [
         ['Format', e.format ?? 'À définir'],
         ['Pages', e.pages ? String(e.pages) : '—'],
-        ['Lecture', pdf ? 'Téléchargement' : 'Dans l’app'],
+        ['Lecture', 'Dans l’app'],
       ];
 
   return (
@@ -148,7 +148,7 @@ export default function EbookScreen() {
       <View style={{ backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.border, paddingTop: 14, paddingHorizontal: gutter, paddingBottom: Math.max(insets.bottom, 16), gap: 10 }}>
         {actionError && <ErrorBanner message={actionError} />}
         {e.owned && pdf ? (
-          <Button label="Voir dans ma bibliothèque" variant="accent" icon="books" onPress={() => router.navigate('/library')} />
+          <Button label="Lire maintenant" variant="accent" icon="books" onPress={() => router.push({ pathname: '/reader/pdf/[id]', params: { id: e.id, title: e.title } })} />
         ) : e.owned ? (
           <Button label="Lire maintenant" variant="accent" icon="books" onPress={() => router.push({ pathname: '/reader/[id]', params: { id: e.id } })} />
         ) : webOnly ? (

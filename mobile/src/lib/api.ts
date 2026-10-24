@@ -174,7 +174,7 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
 
   if (route === 'GET library') return rpc('my_library');
   if ((m = p.match(/^library\/(.+)\/content$/))) return edge('library', { action: 'content', ebookId: m[1] });
-  if ((m = p.match(/^library\/(.+)\/download-url$/))) return edge('library', { action: 'download', ebookId: m[1] });
+  if ((m = p.match(/^library\/(.+)\/pdf$/))) return edge('library', { action: 'pdf', ebookId: m[1] });
   if ((m = p.match(/^library\/(.+)\/progress$/))) return rpc('save_progress', { p_ebook: m[1], p_chapter: b.chapterIndex, p_block: b.blockIndex, p_percent: b.percent });
 
   throw new ApiError(404, `Route inconnue : ${seg.join('/')}`);
@@ -323,7 +323,7 @@ export interface MobileMoneyCountry {
 
 export interface PayoutAccount {
   id: string;
-  kind: 'BANK' | 'MOBILE_MONEY';
+  kind: 'BANK' | 'MOBILE_MONEY' | 'PAYPAL';
   country: string;
   operator: string | null;
   holderName: string;

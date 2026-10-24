@@ -30,26 +30,34 @@ describe('Sécurité et administration', () => {
     assert.ok((await anon().storage.from('ebooks').createSignedUrl(files[0].storage_path, 60)).error);
   });
 
-  it('CA-20 : URL signée valable, refusée si falsifiée', async () => {
-    const e = await env.ebook();
+  it('CA-20 : livre PDF lu dans l’app via un lien de 60 s, réservé à l’acheteur, refusé si falsifié', async () => {
+    const e = await env.ebook('Livre PDF');
+    const pdf = Buffer.from('%PDF-1.4\n%test\n');
+    const path = `${e.id}/main-pdf.pdf`;
+    await env.db.storage.from('ebooks').upload(path, pdf, { contentType: 'application/pdf' });
+    await env.sql.query("delete from public.ebook_files where ebook_id = $1 and kind = 'MAIN'", [e.id]);
+    await env.db.from('ebook_files').insert({ ebook_id: e.id, kind: 'MAIN', storage_path: path, mime_type: 'application/pdf', size_bytes: pdf.length });
     const u = await env.register();
+    const other = await env.register();
     await env.pay(u, [e.id]);
-    const r = await env.fn('library', { token: u.token, body: { action: 'download', ebookId: e.id } });
-    assert.equal(r.status, 200);
+    const r = await env.fn('library', { token: u.token, body: { action: 'pdf', ebookId: e.id } });
+    assert.equal(r.status, 200, r.text);
+    assert.ok(new Date(r.body.expiresAt).getTime() - Date.now() <= 61_000, 'lien de 60 secondes au plus');
     assert.equal((await fetch(r.body.url)).status, 200);
     const forged = r.body.url.replace(/token=([^&]+)/, (_, t) => `token=${t.slice(0, -4)}AAAA`);
     assert.notEqual((await fetch(forged)).status, 200);
+    assert.equal((await env.fn('library', { token: other.token, body: { action: 'pdf', ebookId: e.id } })).status, 403);
   });
 
-  it('téléchargement refusé si non autorisé, limite appliquée', async () => {
-    const locked = await env.ebook('Verrouillé', { downloadAllowed: false });
-    const open = await env.ebook('Ouvert');
+  it('aucun fichier téléchargeable, même pour l’acheteur : lecture dans l’app uniquement', async () => {
+    const e = await env.ebook();
     const u = await env.register();
-    await env.pay(u, [locked.id, open.id]);
-    assert.equal((await env.fn('library', { token: u.token, body: { action: 'download', ebookId: locked.id } })).status, 403);
-    await env.sql.query(`insert into public.settings (key, value) values ('app', '{"maxDownloadsPerBook": 1}')`);
-    assert.equal((await env.fn('library', { token: u.token, body: { action: 'download', ebookId: open.id } })).status, 200);
-    assert.equal((await env.fn('library', { token: u.token, body: { action: 'download', ebookId: open.id } })).status, 429);
+    await env.pay(u, [e.id]);
+    const d = await env.fn('library', { token: u.token, body: { action: 'download', ebookId: e.id } });
+    assert.equal(d.status, 403);
+    assert.match(d.body.message, /uniquement dans l’application/);
+    assert.equal((await env.fn('library', { token: u.token, body: { action: 'content', ebookId: e.id } })).status, 200);
+    assert.equal((await env.fn('library', { token: u.token, body: { action: 'pdf', ebookId: e.id } })).status, 404, 'un EPUB se lit dans le lecteur intégré');
   });
 
   it('CA-22 : un remboursement retire l’accès', async () => {

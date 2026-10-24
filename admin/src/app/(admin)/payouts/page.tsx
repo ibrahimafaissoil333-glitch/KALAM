@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { ErrorState, PageHead, Skeleton, Status, useUi } from '@/components/ui';
 import { api, date, money, useApi } from '@/lib/api';
 
-interface Account { id: string; kind: 'BANK' | 'MOBILE_MONEY'; country: string; operator: string | null; holderName: string; bankName: string | null; masked: string }
+interface Account { id: string; kind: 'BANK' | 'MOBILE_MONEY' | 'PAYPAL'; country: string; operator: string | null; holderName: string; bankName: string | null; masked: string }
 interface Due { sellerId: string; currency: string; amountCents: number; lines: number; seller: { name: string; email: string }; account: Account | null }
-interface Payout { id: string; method: 'BANK' | 'MOBILE_MONEY'; currency: string; amountCents: number; status: string; reference: string | null; providerRef: string | null; failureReason: string | null; paidAt: string | null; createdAt: string; seller: { name: string; email: string } }
+interface Payout { id: string; method: 'BANK' | 'MOBILE_MONEY' | 'PAYPAL'; currency: string; amountCents: number; status: string; reference: string | null; providerRef: string | null; failureReason: string | null; paidAt: string | null; createdAt: string; seller: { name: string; email: string } }
 
 /**
  * Sommes dues aux vendeurs (commission déduite, dettes de remboursement imputées).
- * Mobile Money : versé automatiquement. Banque : l'admin fait le virement depuis sa banque,
- * affiche l'IBAN (chaque affichage est journalisé) puis marque le versement comme effectué.
+ * Mobile Money : versé automatiquement. Banque ou PayPal : l'admin fait le virement (ou l'envoi PayPal),
+ * affiche l'IBAN ou l'e-mail PayPal (chaque affichage est journalisé) puis marque le versement comme effectué.
  */
 export default function PayoutsPage() {
   const { toast } = useUi();
@@ -71,16 +71,16 @@ export default function PayoutsPage() {
                     <td>
                       {!a ? <span className="pill p-wait">Aucun moyen enregistré</span> : (
                         <>
-                          {a.kind === 'BANK' ? `${a.bankName ?? 'Banque'} · ${a.holderName}` : `${a.operator} · ${a.holderName}`}
+                          {a.kind === 'BANK' ? `${a.bankName ?? 'Banque'} · ${a.holderName}` : a.kind === 'PAYPAL' ? `PayPal · ${a.holderName}` : `${a.operator} · ${a.holderName}`}
                           <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13 }}>{revealed[a.id] ?? a.masked}</div>
-                          {a.kind === 'BANK' && !revealed[a.id] && <button className="btn btn-ghost" style={{ minHeight: 32, padding: '0 10px', marginTop: 4 }} onClick={() => reveal(a)}>Afficher l’IBAN</button>}
+                          {a.kind !== 'MOBILE_MONEY' && !revealed[a.id] && <button className="btn btn-ghost" style={{ minHeight: 32, padding: '0 10px', marginTop: 4 }} onClick={() => reveal(a)}>{a.kind === 'PAYPAL' ? 'Afficher l’e-mail PayPal' : 'Afficher l’IBAN'}</button>}
                         </>
                       )}
                     </td>
                     <td>
                       {a?.kind === 'MOBILE_MONEY' ? <span className="muted" style={{ fontSize: 13 }}>Versement automatique</span> : (
                         <div className="row" style={{ gap: 8 }}>
-                          <input className="input" placeholder="Réf. du virement" value={refs[key] ?? ''} onChange={(e) => setRefs({ ...refs, [key]: e.target.value })} style={{ maxWidth: 160, minHeight: 40 }} aria-label="Référence du virement" />
+                          <input className="input" placeholder={a?.kind === 'PAYPAL' ? 'Réf. de l’envoi PayPal' : 'Réf. du virement'} value={refs[key] ?? ''} onChange={(e) => setRefs({ ...refs, [key]: e.target.value })} style={{ maxWidth: 160, minHeight: 40 }} aria-label="Référence du virement" />
                           <button className="btn btn-acc" disabled={!a || busy === key} onClick={() => markPaid(d)}>Marquer comme versé</button>
                         </div>
                       )}
@@ -103,7 +103,7 @@ export default function PayoutsPage() {
                 <tr key={p.id}>
                   <td>{date(p.paidAt ?? p.createdAt, true)}</td>
                   <td>{p.seller.name}</td>
-                  <td>{p.method === 'BANK' ? 'Virement' : 'Mobile Money'}</td>
+                  <td>{p.method === 'BANK' ? 'Virement' : p.method === 'PAYPAL' ? 'PayPal' : 'Mobile Money'}</td>
                   <td className="num">{money(p.amountCents, p.currency)}</td>
                   <td><Status value={p.status} />{p.failureReason && <div className="muted" style={{ fontSize: 12 }}>{p.failureReason}</div>}</td>
                   <td>{p.reference ?? p.providerRef ?? '—'}</td>

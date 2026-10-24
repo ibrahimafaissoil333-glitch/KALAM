@@ -241,10 +241,7 @@ export function EbookEditor({ id }: { id?: string }) {
 
           <section className="card grid" style={{ gap: 12 }}>
             <h2 style={{ margin: 0 }}>Accès</h2>
-            <label className="check">
-              <input type="checkbox" checked={form.downloadAllowed} onChange={(e) => set('downloadAllowed', e.target.checked)} />
-              Autoriser le téléchargement du fichier original
-            </label>
+            <p className="muted" style={{ margin: 0, fontSize: 13 }}>Les livres numériques se lisent uniquement dans l’application : le fichier n’est jamais téléchargeable.</p>
             {field('previewBlocks', 'Taille de l’extrait gratuit (paragraphes)', text('previewBlocks', { inputMode: 'numeric', style: { maxWidth: 140 } }), '0 = pas d’extrait')}
             <label className="check">
               <input type="checkbox" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} />

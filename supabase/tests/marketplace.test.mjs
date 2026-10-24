@@ -285,7 +285,7 @@ describe('Marketplace, Mobile Money et reversements', () => {
 
   // ── Accès aux livres numériques ──────────────────────────────
 
-  it('livre numérique : téléchargement réservé aux acheteurs, plusieurs acheteurs indépendants', async () => {
+  it('livre numérique : lecture réservée aux acheteurs, plusieurs acheteurs indépendants', async () => {
     const admin = await env.admin();
     await enableMobileMoney(admin);
     const seller = await env.register('Vendeur');
@@ -296,12 +296,12 @@ describe('Marketplace, Mobile Money et reversements', () => {
       await phone(await session(r.body.order.id), 'succeeded');
     }
     for (const u of [a, b]) {
-      const d = await env.fn('library', { token: u.token, body: { action: 'download', ebookId: e.id } });
+      const d = await env.fn('library', { token: u.token, body: { action: 'content', ebookId: e.id } });
       assert.equal(d.status, 200, d.text);
-      assert.match(d.body.url, /token=/);
+      assert.equal((await env.fn('library', { token: u.token, body: { action: 'download', ebookId: e.id } })).status, 403, 'pas de fichier à partager');
     }
-    assert.equal((await env.fn('library', { token: stranger.token, body: { action: 'download', ebookId: e.id } })).status, 403);
-    assert.equal((await env.fn('library', { token: seller.token, body: { action: 'download', ebookId: e.id } })).status, 403);
+    assert.equal((await env.fn('library', { token: stranger.token, body: { action: 'content', ebookId: e.id } })).status, 403);
+    assert.equal((await env.fn('library', { token: seller.token, body: { action: 'content', ebookId: e.id } })).status, 403);
     // Le fichier n'est pas accessible directement dans le stockage.
     const { data: files } = await stranger.c.storage.from('ebooks').list(e.id);
     assert.equal(files?.length ?? 0, 0);

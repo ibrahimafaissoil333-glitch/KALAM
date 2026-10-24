@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,11 +20,13 @@ const WORDS_PER_MINUTE = 230;
 /**
  * Lecteur natif : le contenu arrive en blocs de texte (titres, paragraphes, citations).
  * Taille et interligne réglables, sommaire, temps restant, progression synchronisée.
- * `preview=1` : extrait gratuit, `id` est alors le slug de le livre.
+ * `preview=1` : extrait gratuit, `id` est alors le slug du livre. Captures d'écran bloquées.
  */
 export default function Reader() {
   const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();
   const isPreview = preview === '1';
+  // Livre acheté : pas de capture ni d'enregistrement d'écran pendant la lecture.
+  usePreventScreenCapture('reader');
   const insets = useSafeAreaInsets();
   const { online, user, addToCart, setAfterLogin, checkoutMode } = useStore();
   const [book, setBook] = useState<BookContent | null>(null);

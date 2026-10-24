@@ -108,11 +108,6 @@ export default function SettingsPage() {
               <label htmlFor="dev">Nombre maximal d’appareils par compte</label>
               <input id="dev" className="input" inputMode="numeric" value={s.maxDevices ?? ''} onChange={(e) => set('maxDevices', num(e.target.value))} placeholder="Illimité" style={{ maxWidth: 200 }} />
             </div>
-            <div className="field">
-              <label htmlFor="dl">Téléchargements maximum par livre et par client</label>
-              <input id="dl" className="input" inputMode="numeric" value={s.maxDownloadsPerBook ?? ''} onChange={(e) => set('maxDownloadsPerBook', num(e.target.value))} placeholder="Illimité" style={{ maxWidth: 200 }} />
-              <span className="hint">Laisser vide pour ne pas limiter.</span>
-            </div>
           </section>
         </div>
         <div className="grid" style={{ gap: 16 }}>

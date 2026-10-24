@@ -83,4 +83,27 @@ describe('PayPal et administration des vendeurs', () => {
     // Le vendeur ne peut pas la remettre en vente lui-même… mais l'admin oui.
     assert.equal((await admin.c.rpc('admin_moderate_listing', { p_id: e.id, p_action: 'restore' })).data.status, 'PUBLISHED');
   });
+
+  it('compte PayPal du vendeur : chiffré, masqué, versement manuel par l’admin', async () => {
+    const admin = await env.admin();
+    const seller = await env.register('Vendeuse');
+    const buyer = await env.register('Acheteur');
+    assert.equal((await env.fn('payout-accounts', { token: seller.token, body: { kind: 'PAYPAL', holderName: 'V', country: 'FR', email: 'pas-un-email' } })).status, 400);
+    const r = await env.fn('payout-accounts', { token: seller.token, body: { kind: 'PAYPAL', holderName: 'V', country: 'FR', email: 'Vendeuse.Pro@Example.com' } });
+    assert.equal(r.status, 201, r.text);
+    assert.equal(r.body[0].masked, 've•••@example.com');
+    const { rows: [acc] } = await env.sql.query('select secret_ciphertext from public.seller_payout_accounts');
+    assert.equal(acc.secret_ciphertext.includes('example'), false, 'e-mail chiffré');
+    const e = await env.ebook('Livre', { priceCents: 1000 });
+    await env.sql.query('update public.ebooks set seller_id = $1 where id = $2', [seller.id, e.id]);
+    await env.pay(buyer, [e.id]);
+    const [due] = (await admin.c.rpc('admin_payouts_due')).data;
+    assert.equal(due.account.kind, 'PAYPAL');
+    assert.equal(due.account.masked, 've•••@example.com');
+    const shown = await env.fn('admin', { token: admin.token, body: { action: 'reveal-payout-account', accountId: due.account.id } });
+    assert.equal(shown.body.value, 'vendeuse.pro@example.com');
+    await admin.c.rpc('admin_mark_bank_payout', { p_seller: seller.id, p_currency: 'EUR', p_reference: 'PP-123' });
+    const [p] = (await admin.c.rpc('admin_payouts')).data;
+    assert.deepEqual([p.method, p.amountCents, p.reference], ['PAYPAL', 980, 'PP-123']);
+  });
 });
