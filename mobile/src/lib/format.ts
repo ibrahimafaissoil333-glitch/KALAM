@@ -11,7 +11,7 @@ export function shortDate(d: string | Date) {
   return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d));
 }
 
-export const plural = (n: number) => `${n} e-book${n > 1 ? 's' : ''}`;
+export const plural = (n: number) => `${n} livre${n > 1 ? 's' : ''}`;
 
 /** Recherche insensible aux accents (bibliothèque, côté appareil). */
 export const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();

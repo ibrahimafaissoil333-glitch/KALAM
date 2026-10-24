@@ -5,10 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "fr.folio.app"
+      "bundleIdentifier": "fr.folio.app",
+      "icon": {
+        "light": "./assets/icon.png",
+        "dark": "./assets/icon-dark.png"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -40,7 +44,11 @@
         {
           "backgroundColor": "#FAFAF7",
           "image": "./assets/splash-icon.png",
-          "imageWidth": 160
+          "imageWidth": 160,
+          "dark": {
+            "backgroundColor": "#14151F",
+            "image": "./assets/icon-dark.png"
+          }
         }
       ],
       "expo-video"

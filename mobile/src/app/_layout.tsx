@@ -1,14 +1,15 @@
 import { HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_600SemiBold, HankenGrotesk_700Bold } from '@expo-google-fonts/hanken-grotesk';
 import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StoreProvider, useStore } from '@/lib/store';
+import { AppearanceProvider } from '@/ui/appearance';
 import { ToastProvider } from '@/ui/components';
-import { color } from '@/ui/theme';
+import { color, glass, scheme } from '@/ui/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -20,16 +21,19 @@ function Root() {
     if (show) SplashScreen.hideAsync().catch(() => undefined);
   }, [show]);
   if (!show) return null;
+  // Thème de navigation aligné sur la palette (sinon fond gris clair par défaut derrière les écrans).
+  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const navTheme = { ...base, colors: { ...base.colors, background: glass ? 'transparent' : color.paper, card: color.surface, text: color.ink, border: color.border, primary: color.accent } };
   return (
-    <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.paper }, animation: 'slide_from_right' }}>
+    <ThemeProvider value={navTheme}>
+      <StatusBar style="auto" />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: glass ? 'transparent' : color.paper }, animation: 'slide_from_right' }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="reader/[id]" options={{ animation: 'fade', contentStyle: { backgroundColor: color.readerPaper } }} />
         <Stack.Screen name="checkout/result" options={{ gestureEnabled: false, animation: 'fade' }} />
         <Stack.Screen name="checkout/mobile-money" options={{ gestureEnabled: false, animation: 'fade' }} />
       </Stack>
-    </>
+    </ThemeProvider>
   );
 }
 
@@ -37,9 +41,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StoreProvider>
-        <ToastProvider>
-          <Root />
-        </ToastProvider>
+        <AppearanceProvider>
+          <ToastProvider>
+            <Root />
+          </ToastProvider>
+        </AppearanceProvider>
       </StoreProvider>
     </SafeAreaProvider>
   );

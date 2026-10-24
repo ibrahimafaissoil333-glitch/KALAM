@@ -18,7 +18,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, IconName } from './icons';
-import { color, font, gutter, radius, size } from './theme';
+import { color, font, glass, gutter, radius, scheme, size } from './theme';
+import { GlassSurface } from './glass';
 
 // ── Typographie ───────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ export function Button({
   label: string; onPress?: () => void; variant?: ButtonVariant; small?: boolean; icon?: IconName; iconRight?: IconName;
   loading?: boolean; disabled?: boolean; style?: StyleProp<ViewStyle>; accessibilityLabel?: string;
 }) {
-  const v = VARIANTS[variant];
+  const v = variants()[variant];
   const off = disabled || loading;
   return (
     <Pressable
@@ -75,14 +76,15 @@ export function Button({
   );
 }
 
-const VARIANTS: Record<ButtonVariant, { bg: string; pressed: string; fg: string; border?: string }> = {
-  primary: { bg: color.ink, pressed: color.inkPressed, fg: '#FFFFFF' },
+// Fonction (et non constante) : les couleurs suivent le thème actif.
+const variants = (): Record<ButtonVariant, { bg: string; pressed: string; fg: string; border?: string }> => ({
+  primary: { bg: color.ink, pressed: color.inkPressed, fg: color.onInk },
   accent: { bg: color.accent, pressed: color.accentPressed, fg: '#FFFFFF' },
-  ghost: { bg: 'transparent', pressed: color.divider, fg: color.ink, border: color.borderStrong },
-  gold: { bg: color.gold, pressed: color.goldPressed, fg: color.ink },
+  ghost: { bg: glass ? color.glassFill : 'transparent', pressed: color.divider, fg: color.ink, border: glass ? color.glassBorder : color.borderStrong },
+  gold: { bg: color.gold, pressed: color.goldPressed, fg: color.onGold },
   link: { bg: 'transparent', pressed: 'transparent', fg: color.accent },
-  danger: { bg: 'transparent', pressed: color.dangerSoft, fg: color.dangerText, border: '#F0C4C6' },
-};
+  danger: { bg: 'transparent', pressed: color.dangerSoft, fg: color.dangerText, border: color.dangerBorder },
+});
 
 export function IconButton({ icon, label, onPress, badge, tone = 'default', style }: { icon: IconName; label: string; onPress: () => void; badge?: number; tone?: 'default' | 'reader'; style?: StyleProp<ViewStyle> }) {
   return (
@@ -126,7 +128,7 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
       accessibilityState={{ selected: !!selected }}
       style={[styles.chip, selected && { backgroundColor: color.ink, borderColor: color.ink }]}
     >
-      <T weight="semibold" style={{ fontSize: 14, color: selected ? '#FFFFFF' : color.ink }}>{label}</T>
+      <T weight="semibold" style={{ fontSize: 14, color: selected ? color.onInk : color.ink }}>{label}</T>
     </Pressable>
   );
 }
@@ -134,12 +136,13 @@ export function Chip({ label, selected, onPress }: { label: string; selected?: b
 export function Tag({ label, tone = 'accent' }: { label: string; tone?: 'accent' | 'gold' }) {
   return (
     <View style={[styles.tag, tone === 'gold' && { backgroundColor: color.gold }]}>
-      <T weight="bold" style={{ fontSize: 12, letterSpacing: 0.2, color: tone === 'gold' ? color.ink : color.accentText }}>{label}</T>
+      <T weight="bold" style={{ fontSize: 12, letterSpacing: 0.2, color: tone === 'gold' ? color.onGold : color.accentText }}>{label}</T>
     </View>
   );
 }
 
-const PILL = {
+type PillStatus = 'PAID' | 'PENDING' | 'FAILED' | 'REFUNDED' | 'CANCELED' | 'OK' | 'OFFLINE';
+const pill = (): Record<PillStatus, [string, string, string]> => ({
   PAID: ['Confirmée', color.successSoft, color.successText],
   PENDING: ['En attente', color.warningSoft, color.warningText],
   FAILED: ['Échouée', color.dangerSoft, color.dangerText],
@@ -147,10 +150,10 @@ const PILL = {
   CANCELED: ['Annulée', color.neutralSoft, color.neutralText],
   OK: ['Disponible', color.successSoft, color.successText],
   OFFLINE: ['Hors ligne', color.successSoft, color.successText],
-} as const;
+});
 
-export function StatusPill({ status }: { status: keyof typeof PILL }) {
-  const [label, bg, fg] = PILL[status];
+export function StatusPill({ status }: { status: PillStatus }) {
+  const [label, bg, fg] = pill()[status];
   return (
     <View style={[styles.pill, { backgroundColor: bg }]} accessibilityLabel={`Statut : ${label}`}>
       <View style={[styles.dot, { backgroundColor: fg }]} />
@@ -254,17 +257,22 @@ export function Cover({ title, author, cover, width, style }: { title: string; a
   const height = Math.round(width * 1.48);
   const s = width / 132;
   const base: ViewStyle = { width, height, borderTopLeftRadius: 4, borderBottomLeftRadius: 4, borderTopRightRadius: 10, borderBottomRightRadius: 10, overflow: 'hidden', boxShadow: '0 10px 22px -10px rgba(20,21,31,.55)' };
-  if (cover.url) {
-    return <Image source={{ uri: cover.url }} style={[base, style] as never} accessibilityRole="image" accessibilityLabel={`Couverture : ${title}`} />;
-  }
+  // La couverture générée reste visible sous la photo : rien de vide pendant le chargement ou si l'image échoue.
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={`Couverture : ${title}`} style={[base, { backgroundColor: cover.bg, padding: 12 * s, paddingLeft: 15 * s, justifyContent: 'space-between' }, style]}>
       <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: Math.max(3, 5 * s), backgroundColor: 'rgba(0,0,0,.16)' }} />
       <T weight="bold" allowFontScaling={false} numberOfLines={1} style={{ color: cover.fg, opacity: 0.85, fontSize: Math.max(5, 9 * s), letterSpacing: 1.3 * s, textTransform: 'uppercase' }}>{author}</T>
       <View style={{ width: 55 * s, height: 55 * s, borderRadius: 999, borderWidth: 1.5, borderColor: cover.fg, opacity: 0.55, alignSelf: 'flex-end' }} />
       <T serif allowFontScaling={false} numberOfLines={3} style={{ color: cover.fg, fontSize: Math.max(8, 20 * s), lineHeight: Math.max(8, 20 * s) * 1.04 }}>{title}</T>
+      {cover.url && <CoverImage uri={cover.url} />}
     </View>
   );
+}
+
+function CoverImage({ uri }: { uri: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return <Image source={{ uri }} resizeMode="cover" onError={() => setFailed(true)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />;
 }
 
 // ── Mise en page et états ─────────────────────────────────────
@@ -310,7 +318,7 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
 
 export function InfoNote({ icon = 'info', children, tone = 'muted' }: { icon?: IconName; children: ReactNode; tone?: 'muted' | 'box' | 'accent' }) {
   const box = tone === 'box' ? { backgroundColor: color.infoSoft, padding: 14, paddingHorizontal: 16, borderRadius: 14 } : tone === 'accent' ? { backgroundColor: color.accentSoft, padding: 14, paddingHorizontal: 16, borderRadius: 14 } : {};
-  const fg = tone === 'accent' ? color.accentDeep : tone === 'box' ? '#2E3040' : color.muted;
+  const fg = tone === 'accent' ? color.accentDeep : tone === 'box' ? color.body : color.muted;
   return (
     <View style={[{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }, box]}>
       <Icon name={icon} size={18} color={fg} />
@@ -334,6 +342,7 @@ export function Skeleton({ w, h, style }: { w?: number | `${number}%`; h: number
 }
 
 export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  if (glass) return <GlassSurface radius={radius.card} style={style}>{children}</GlassSurface>;
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
@@ -371,9 +380,9 @@ export function StepBar({ step }: { step: 1 | 2 | 3 }) {
 
 export function OfflineBanner() {
   return (
-    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: color.ink, paddingVertical: 8, paddingHorizontal: gutter }} accessibilityRole="alert">
+    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: color.night, paddingVertical: 8, paddingHorizontal: gutter }} accessibilityRole="alert">
       <Icon name="offline" size={16} color={color.gold} />
-      <T weight="semibold" style={{ color: '#FFFFFF', fontSize: 13 }}>Hors ligne · seuls les e-books téléchargés sont disponibles</T>
+      <T weight="semibold" style={{ color: '#FFFFFF', fontSize: 13 }}>Hors ligne · seuls les livres téléchargés sont disponibles</T>
     </View>
   );
 }
@@ -405,25 +414,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const styles = StyleSheet.create({
+// Recalculés à chaque changement de thème ou de mode verre (refreshStyles, appelée par le layout racine).
+let styles = makeStyles();
+export function refreshStyles() {
+  styles = makeStyles();
+}
+
+function makeStyles() {
+  const fill = glass ? color.glassFill : color.surface;
+  const edge = (c: string) => (glass ? color.glassBorder : c);
+  return StyleSheet.create({
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: size.button, paddingHorizontal: 20, borderRadius: radius.button },
   btnSm: { minHeight: size.buttonSm, paddingHorizontal: 16, borderRadius: radius.control },
-  ibtn: { width: size.touch, height: size.touch, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: color.borderControl, backgroundColor: color.surface },
+  ibtn: { width: size.touch, height: size.touch, borderRadius: glass ? 999 : radius.control, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: edge(color.borderControl), backgroundColor: fill },
   badge: { position: 'absolute', minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
   badgeText: { color: '#FFFFFF', fontSize: 11 },
-  chip: { minHeight: size.chip, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1.5, borderColor: color.borderControl, backgroundColor: color.surface, justifyContent: 'center' },
+  chip: { minHeight: size.chip, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1.5, borderColor: edge(color.borderControl), backgroundColor: fill, justifyContent: 'center' },
   tag: { alignSelf: 'flex-start', minHeight: 26, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.accentSoft, justifyContent: 'center' },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 26, paddingHorizontal: 10, borderRadius: 999, alignSelf: 'flex-start' },
   dot: { width: 6, height: 6, borderRadius: 3 },
-  input: { minHeight: size.input, borderRadius: radius.button, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, paddingHorizontal: 16, fontSize: 16, fontFamily: font.regular, color: color.ink },
-  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: color.surface, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  switch: { width: 50, height: 30, borderRadius: 999, backgroundColor: '#C9C8C2' },
+  input: { minHeight: size.input, borderRadius: radius.button, borderWidth: 1.5, borderColor: edge(color.borderStrong), backgroundColor: fill, paddingHorizontal: 16, fontSize: 16, fontFamily: font.regular, color: color.ink },
+  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: color.borderStrong, backgroundColor: fill, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  switch: { width: 50, height: 30, borderRadius: 999, backgroundColor: color.track },
   knob: { position: 'absolute', top: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
   iconTile: { width: 96, height: 96, borderRadius: radius.tile, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' },
   err: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: color.dangerSoft, borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, minHeight: 44 },
   card: { backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, borderRadius: radius.card },
-  toast: { position: 'absolute', left: 16, right: 16, bottom: 110, backgroundColor: color.ink, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', gap: 10, alignItems: 'center', boxShadow: '0 14px 30px -10px rgba(20,21,31,.6)' },
-});
+  toast: { position: 'absolute', left: 16, right: 16, bottom: 110, backgroundColor: color.night, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', gap: 10, alignItems: 'center', boxShadow: '0 14px 30px -10px rgba(20,21,31,.6)' },
+  });
+}
 
 // ── Logo ──────────────────────────────────────────────────────
 
@@ -434,7 +453,14 @@ const LOGO_RATIO = 463 / 520;
 export function Logo({ height = 40, withName, name = 'Kalam' }: { height?: number; withName?: boolean; name?: string }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} accessible accessibilityRole="image" accessibilityLabel={name}>
-      <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+      {scheme === 'dark' ? (
+        // Livre encre sur fond sombre : posé dans une pastille papier (règle de la charte).
+        <View style={{ backgroundColor: '#FAFAF7', borderRadius: height * 0.28, padding: height * 0.12 }}>
+          <Image source={LOGO} style={{ width: height * 0.76 * LOGO_RATIO, height: height * 0.76 }} resizeMode="contain" />
+        </View>
+      ) : (
+        <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+      )}
       {withName && <T serif style={{ fontSize: height * 0.8, lineHeight: height, color: color.ink }}>{name}</T>}
     </View>
   );

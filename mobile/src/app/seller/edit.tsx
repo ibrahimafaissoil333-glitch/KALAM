@@ -1,4 +1,5 @@
 import * as DocumentPicker from 'expo-document-picker';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -69,8 +70,9 @@ export default function SellerEdit() {
   const pickCover = async () => {
     const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', allowsEditing: true, aspect: [2, 3], quality: 0.8 });
     if (!r.canceled && r.assets[0]) {
-      const a = r.assets[0];
-      setCover({ uri: a.uri, name: a.fileName ?? 'couverture.jpg', mimeType: a.mimeType ?? 'image/jpeg' });
+      // Couverture réduite (900 px de large, JPEG) : affichage rapide dans le catalogue.
+      const img = await (await ImageManipulator.manipulate(r.assets[0].uri).resize({ width: 900 }).renderAsync()).saveAsync({ compress: 0.75, format: SaveFormat.JPEG });
+      setCover({ uri: img.uri, name: 'couverture.jpg', mimeType: 'image/jpeg' });
     }
   };
   const pickFile = async () => {

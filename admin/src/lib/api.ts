@@ -80,6 +80,10 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   // Mobile Money : interrupteurs (réglage en base, sans redéploiement) et historique
   if (p === 'admin/mobile-money') return method === 'PUT' ? rpc('admin_set_mobile_money', { p: b }) : rpc('admin_get_mobile_money');
   if (p === 'admin/mobile-money/log') return rpc('admin_mobile_money_log');
+  // Vendeurs : ventes et modération des annonces
+  if (p === 'admin/sellers') return rpc('admin_sellers', { p_q: opt('q') });
+  if ((m = p.match(/^admin\/sellers\/([^/]+)$/))) return rpc('admin_seller', { p_id: m[1] });
+  if ((m = p.match(/^admin\/listings\/([^/]+)\/(remove|restore)$/))) return rpc('admin_moderate_listing', { p_id: m[1], p_action: m[2], p_reason: b.reason ?? null });
   // Carrousel publicitaire de l'accueil
   if (p === 'admin/promos' && method === 'GET') return rpc('admin_promo_slides');
   if (p === 'admin/promos' && method === 'POST') return rpc('admin_save_promo_slide', { p_id: null, p: b });

@@ -109,7 +109,7 @@ export default function CartScreen() {
       <View style={{ padding: gutter, gap: 8 }}>
         {!online && <T muted style={{ fontSize: 13, textAlign: 'center' }}>Le paiement nécessite une connexion internet.</T>}
         {checkoutMode === 'web_only' ? (
-          <T muted style={{ fontSize: 14, textAlign: 'center' }}>L’achat se fait sur notre site. Vos e-books apparaîtront ensuite dans votre bibliothèque.</T>
+          <T muted style={{ fontSize: 14, textAlign: 'center' }}>L’achat se fait sur notre site. Vos livres apparaîtront ensuite dans votre bibliothèque.</T>
         ) : (
           <Button label="Passer au paiement" variant="accent" iconRight="arrow" disabled={!online || mixedCurrencies} onPress={checkout} />
         )}

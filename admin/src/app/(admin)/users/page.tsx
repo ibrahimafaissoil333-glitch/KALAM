@@ -54,7 +54,7 @@ export default function UsersPage() {
       {data && data.length > 0 && (
         <table className="t">
           <thead>
-            <tr><th>Utilisateur</th><th>Rôle</th><th>Statut</th><th className="num">Commandes payées</th><th className="num">E-books</th><th>Inscrit le</th></tr>
+            <tr><th>Utilisateur</th><th>Rôle</th><th>Statut</th><th className="num">Commandes payées</th><th className="num">Livres</th><th>Inscrit le</th></tr>
           </thead>
           <tbody>
             {data.map((u) => (

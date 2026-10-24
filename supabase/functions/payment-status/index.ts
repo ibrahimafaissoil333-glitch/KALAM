@@ -2,6 +2,7 @@
 // En simulation, la confirmation de l'acheteur est jouée automatiquement après FAKE_MM_AUTO_CONFIRM_SECONDS.
 import { check, env, handler, HttpError, json, serviceClient, userFromRequest } from '../_shared/http.ts';
 import { FakeMobileMoney, mobileMoneyProvider, simulateCallback } from '../_shared/mobile-money.ts';
+import { PayPalProvider, paypalProvider } from '../_shared/payments.ts';
 
 Deno.serve(handler(async (req) => {
   const { user } = await userFromRequest(req);
@@ -30,6 +31,16 @@ Deno.serve(handler(async (req) => {
       }
     }
     status = check(await db.from('orders').select('status').eq('id', order.id).single()).status;
+  }
+  // PayPal validé mais pas encore capturé (retour interrompu, webhook en retard) : capture ici.
+  const pp = status === 'PENDING' && pay?.method === 'PAYPAL' ? paypalProvider() : null;
+  if (pp instanceof PayPalProvider && (await pp.orderStatus(pay.provider_session_id).catch(() => '')) === 'APPROVED') {
+    const c = await pp.capture(pay.provider_session_id);
+    const event = `poll_${pay.provider_session_id}`;
+    if (c.outcome === 'succeeded' && check(await db.rpc('svc_record_event', { p_provider: pp.name, p_event: event, p_type: 'paypal.poll', p_outcome: c.outcome }))) {
+      check(await db.rpc('svc_mark_paid', { p_provider: pp.name, p_event: event, p_session: pay.provider_session_id, p_payment_ref: c.paymentId ?? null, p_tax: null, p_country: null }));
+      status = 'PAID';
+    }
   }
   return json({
     orderId: order.id, reference: order.reference, status, paymentMethod: order.payment_method,

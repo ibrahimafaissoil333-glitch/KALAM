@@ -9,8 +9,9 @@ import { supabase } from '@/lib/supabase';
 
 const NAV = [
   ['/', 'Tableau de bord'],
-  ['/ebooks', 'E-books'],
+  ['/ebooks', 'Livres'],
   ['/orders', 'Commandes'],
+  ['/sellers', 'Vendeurs'],
   ['/users', 'Utilisateurs'],
   ['/stats', 'Statistiques'],
   ['/promos', 'Carrousel'],

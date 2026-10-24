@@ -17,12 +17,12 @@ interface Log {
 
 const LABELS: Record<string, string> = {
   'admin.login': 'Connexion administrateur',
-  'ebook.create': 'E-book créé',
+  'ebook.create': 'Livre créé',
   'ebook.price': 'Prix modifié',
-  'ebook.publish': 'E-book publié',
-  'ebook.unpublish': 'E-book dépublié',
-  'ebook.archive': 'E-book archivé',
-  'ebook.delete': 'E-book supprimé',
+  'ebook.publish': 'Livre publié',
+  'ebook.unpublish': 'Livre dépublié',
+  'ebook.archive': 'Livre archivé',
+  'ebook.delete': 'Livre supprimé',
   'ebook.upload.cover': 'Couverture envoyée',
   'ebook.upload.main': 'Fichier envoyé',
   'order.refund': 'Commande remboursée',

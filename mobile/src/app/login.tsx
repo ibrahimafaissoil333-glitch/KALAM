@@ -42,7 +42,7 @@ export default function LoginScreen() {
           <T serif accessibilityRole="header" style={{ fontSize: 38, lineHeight: 40 }}>
             {reason === 'checkout' ? 'Connectez-vous pour finaliser l’achat' : 'Connexion'}
           </T>
-          <T muted style={{ lineHeight: 24 }}>Vos e-books sont rattachés à votre compte : vous les retrouvez sur tous vos appareils.</T>
+          <T muted style={{ lineHeight: 24 }}>Vos livres sont rattachés à votre compte : vous les retrouvez sur tous vos appareils.</T>
         </View>
         {cart.items.length > 0 && <InfoNote icon="cart" tone="accent">Votre panier est conservé ({plural(cart.items.length)})</InfoNote>}
         {error && <ErrorBanner message={error} />}

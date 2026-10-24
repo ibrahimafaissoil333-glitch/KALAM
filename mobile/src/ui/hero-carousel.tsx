@@ -88,7 +88,7 @@ export function HeroCarousel({ slides, greeting }: { slides: PromoSlide[]; greet
               onPress={() => open(e)}
               accessibilityRole="button"
               accessibilityLabel={`${s.headline ?? e.title}. ${s.subtitle ?? e.author}. Diapositive ${i + 1} sur ${slides.length}`}
-              style={{ width: cardWidth, height: HEIGHT, backgroundColor: color.ink, borderRadius: 24, overflow: 'hidden' }}
+              style={{ width: cardWidth, height: HEIGHT, backgroundColor: color.night, borderRadius: 24, overflow: 'hidden' }}
             >
               {video && <SlideVideo uri={video} playing={i === index} />}
               {video && <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(20,21,31,.55)' }} />}

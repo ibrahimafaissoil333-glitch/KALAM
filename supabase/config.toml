@@ -432,3 +432,6 @@ verify_jwt = false
 
 [functions.payouts]
 verify_jwt = false
+
+[functions.paypal-return]
+verify_jwt = false

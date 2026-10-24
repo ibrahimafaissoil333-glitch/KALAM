@@ -9,7 +9,7 @@ import { useStore } from '@/lib/store';
 import { useQuery } from '@/lib/use-query';
 import { Button, Card, Cover, EmptyState, ErrorBanner, IconButton, KindBadge, Skeleton, T, Tag, useToast } from '@/ui/components';
 import { Icon } from '@/ui/icons';
-import { color, gutter } from '@/ui/theme';
+import { color, gutter, scheme } from '@/ui/theme';
 
 export default function EbookScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -31,7 +31,7 @@ export default function EbookScreen() {
             <Skeleton h={120} />
           </View>
         )}
-        {error && (error.includes('introuvable') ? <EmptyState icon="search" title="Cet e-book n’est plus disponible" /> : <ErrorBanner message={error} onRetry={reload} />)}
+        {error && (error.includes('introuvable') ? <EmptyState icon="search" title="Ce livre n’est plus disponible" /> : <ErrorBanner message={error} onRetry={reload} />)}
       </View>
     );
   }
@@ -76,7 +76,7 @@ export default function EbookScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={{ backgroundColor: e.cover.tint, paddingBottom: 32 }}>
+        <View style={{ backgroundColor: scheme === 'dark' ? color.surface : e.cover.tint, paddingBottom: 32 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: insets.top + 12, paddingHorizontal: gutter, paddingBottom: 12 }}>
             <IconButton icon="back" label="Retour" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
             <IconButton icon="cart" label="Panier" badge={cart.items.length} onPress={() => router.navigate('/cart')} />
@@ -104,7 +104,7 @@ export default function EbookScreen() {
         </View>
         <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
           <T weight="bold" accessibilityRole="header" style={{ fontSize: 17 }}>Description</T>
-          <T style={{ lineHeight: 26, color: '#2E3040' }}>{e.description}</T>
+          <T style={{ lineHeight: 26, color: color.body }}>{e.description}</T>
         </View>
         {physical && e.shipping.length > 0 && (
           <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
@@ -138,7 +138,7 @@ export default function EbookScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <T weight="bold">{e.owned ? 'Ouvrir dans le lecteur' : 'Lire un extrait gratuit'}</T>
-              <T muted style={{ fontSize: 14 }}>{e.owned ? 'Cet e-book est dans votre bibliothèque' : 'Les premières pages, sans compte'}</T>
+              <T muted style={{ fontSize: 14 }}>{e.owned ? 'Ce livre est dans votre bibliothèque' : 'Les premières pages, sans compte'}</T>
             </View>
             <Icon name="chevron" color={color.muted} />
           </Pressable>
@@ -155,7 +155,7 @@ export default function EbookScreen() {
           // Mode « app de lecture » : pas de prix ni d'achat dans l'app (règles des stores).
           <View style={{ gap: 10 }}>
             <T muted style={{ textAlign: 'center', fontSize: 14, lineHeight: 20 }}>
-              Cet e-book s’achète sur notre site. Il apparaîtra ensuite dans votre bibliothèque, avec le même compte.
+              Ce livre s’achète sur notre site. Il apparaîtra ensuite dans votre bibliothèque, avec le même compte.
             </T>
             {config?.webCheckoutUrl && <Button label="Ouvrir le site" variant="ghost" small onPress={() => WebBrowser.openBrowserAsync(config.webCheckoutUrl!)} />}
           </View>

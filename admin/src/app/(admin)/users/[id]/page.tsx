@@ -87,7 +87,7 @@ export default function UserPage({ params }: { params: Promise<{ id: string }> }
           </section>
           <section className="card">
             <h2>Bibliothèque</h2>
-            {u.entitlements.length === 0 ? <p className="muted" style={{ margin: 0 }}>Aucun e-book.</p> : (
+            {u.entitlements.length === 0 ? <p className="muted" style={{ margin: 0 }}>Aucun livre.</p> : (
               <ul style={{ margin: 0, paddingLeft: 18 }}>{u.entitlements.map((e) => <li key={e.ebook.id}>{e.ebook.title} <span className="muted">· depuis le {date(e.grantedAt)}</span></li>)}</ul>
             )}
           </section>

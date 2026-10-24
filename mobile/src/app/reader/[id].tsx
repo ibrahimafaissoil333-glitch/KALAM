@@ -19,7 +19,7 @@ const WORDS_PER_MINUTE = 230;
 /**
  * Lecteur natif : le contenu arrive en blocs de texte (titres, paragraphes, citations).
  * Taille et interligne réglables, sommaire, temps restant, progression synchronisée.
- * `preview=1` : extrait gratuit, `id` est alors le slug de l'e-book.
+ * `preview=1` : extrait gratuit, `id` est alors le slug de le livre.
  */
 export default function Reader() {
   const { id, preview } = useLocalSearchParams<{ id: string; preview?: string }>();
@@ -145,7 +145,7 @@ export default function Reader() {
         <View style={{ paddingHorizontal: 16 }}>
           <IconButton icon="back" label="Fermer la lecture" tone="reader" onPress={close} />
         </View>
-        <EmptyState icon={online ? 'alert' : 'offline'} title={online ? 'Lecture impossible' : 'Disponible en ligne uniquement'} text={online ? error : 'Téléchargez cet e-book depuis votre bibliothèque pour le lire sans connexion.'} />
+        <EmptyState icon={online ? 'alert' : 'offline'} title={online ? 'Lecture impossible' : 'Disponible en ligne uniquement'} text={online ? error : 'Téléchargez ce livre depuis votre bibliothèque pour le lire sans connexion.'} />
       </View>
     );
   }
@@ -174,7 +174,7 @@ export default function Reader() {
       </View>
 
       {isPreview && checkoutMode !== 'web_only' && (
-        <View style={{ marginHorizontal: 20, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: color.ink }}>
+        <View style={{ marginHorizontal: 20, marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: color.night }}>
           <T weight="semibold" style={{ flex: 1, fontSize: 14, color: '#FFFFFF' }}>Extrait gratuit</T>
           <Button label="Acheter" variant="gold" small onPress={buy} style={{ minHeight: 40 }} />
         </View>
@@ -263,7 +263,7 @@ export default function Reader() {
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   {[[1.4, 'Serré'], [1.55, 'Normal'], [1.8, 'Aéré']].map(([v, l]) => (
                     <Pressable key={l} onPress={() => setPrefs(fontSize, v as number)} accessibilityRole="button" accessibilityState={{ selected: lineHeight === v }} style={{ flex: 1, minHeight: 44, borderRadius: 12, borderWidth: 1.5, borderColor: lineHeight === v ? color.ink : color.borderControl, backgroundColor: lineHeight === v ? color.ink : color.surface, alignItems: 'center', justifyContent: 'center' }}>
-                      <T weight="semibold" style={{ fontSize: 14, color: lineHeight === v ? '#FFFFFF' : color.ink }}>{l}</T>
+                      <T weight="semibold" style={{ fontSize: 14, color: lineHeight === v ? color.onInk : color.ink }}>{l}</T>
                     </Pressable>
                   ))}
                 </View>

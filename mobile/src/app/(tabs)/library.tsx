@@ -113,7 +113,7 @@ export default function LibraryScreen() {
     return (
       <View style={{ flex: 1 }}>
         <ScreenHeader title="Ma bibliothèque" />
-        <EmptyState icon="lock" title="Connectez-vous pour voir vos e-books">
+        <EmptyState icon="lock" title="Connectez-vous pour voir vos livres">
           <Button label="Se connecter" variant="accent" onPress={() => { setAfterLogin('library'); router.push('/login'); }} />
           <Button label="Créer un compte" variant="ghost" onPress={() => { setAfterLogin('library'); router.push('/signup'); }} />
         </EmptyState>
@@ -125,7 +125,7 @@ export default function LibraryScreen() {
     return (
       <View style={{ flex: 1 }}>
         <ScreenHeader title="Ma bibliothèque" />
-        <EmptyState icon="books" title="Aucun e-book pour l’instant" text="Vos achats apparaîtront ici dès la confirmation du paiement.">
+        <EmptyState icon="books" title="Aucun livre pour l’instant" text="Vos achats apparaîtront ici dès la confirmation du paiement.">
           <Button label="Explorer le catalogue" onPress={() => router.navigate('/catalog')} />
         </EmptyState>
       </View>
@@ -176,8 +176,8 @@ export default function LibraryScreen() {
         ) : (
           <EmptyState
             icon={tab === 'offline' || !online ? 'download' : 'search'}
-            title={q ? 'Aucun résultat' : tab === 'offline' || !online ? 'Aucun e-book téléchargé' : 'Aucune lecture en cours'}
-            text={tab === 'offline' || !online ? 'Touchez l’icône de téléchargement d’un e-book pour le lire sans connexion.' : undefined}
+            title={q ? 'Aucun résultat' : tab === 'offline' || !online ? 'Aucun livre téléchargé' : 'Aucune lecture en cours'}
+            text={tab === 'offline' || !online ? 'Touchez l’icône de téléchargement d’un livre pour le lire sans connexion.' : undefined}
           />
         )
       }

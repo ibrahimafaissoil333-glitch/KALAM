@@ -14,12 +14,12 @@ interface Dashboard {
   recentSales: { title: string; kind: 'PHYSICAL' | 'DIGITAL'; date: string; reference: string; currency: string; netCents: number | null; status: string }[];
 }
 
-const LISTING_STATUS: Record<SellerEbook['status'], [string, string, string]> = {
+const listingStatus = (): Record<SellerEbook['status'], [string, string, string]> => ({
   PUBLISHED: ['En vente', color.successSoft, color.successText],
   PAUSED: ['En pause', color.warningSoft, color.warningText],
   DRAFT: ['Brouillon', color.neutralSoft, color.neutralText],
   ARCHIVED: ['Retirée', color.neutralSoft, color.neutralText],
-};
+});
 
 /** Espace vendeur : chiffres clés, gains, annonces. Tout utilisateur connecté peut vendre. */
 export default function SellerHome() {
@@ -83,7 +83,7 @@ export default function SellerHome() {
         ) : (
           <Card>
             {listings.map((e, i) => {
-              const [label, bg, fg] = LISTING_STATUS[e.status];
+              const [label, bg, fg] = listingStatus()[e.status];
               return (
                 <Pressable
                   key={e.id}

@@ -111,7 +111,7 @@ export default function CatalogScreen() {
             onChangeText={setQ}
             placeholder="Titre, auteur, mot-clé"
             placeholderTextColor={color.placeholder}
-            accessibilityLabel="Rechercher un e-book"
+            accessibilityLabel="Rechercher un livre"
             returnKeyType="search"
             autoCorrect={false}
             maxFontSizeMultiplier={2}
@@ -160,7 +160,7 @@ export default function CatalogScreen() {
             {[0, 1, 2, 3].map((i) => <Skeleton key={i} w={'47%' as const} h={250} />)}
           </View>
         ) : error ? null : (
-          <EmptyState icon="search" title="Aucun e-book ne correspond" text="Vérifiez l’orthographe, essayez un mot plus général ou retirez un filtre.">
+          <EmptyState icon="search" title="Aucun livre ne correspond" text="Vérifiez l’orthographe, essayez un mot plus général ou retirez un filtre.">
             <Button label="Effacer la recherche et les filtres" onPress={clear} />
           </EmptyState>
         )

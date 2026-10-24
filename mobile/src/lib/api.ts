@@ -287,7 +287,7 @@ export interface Order {
   currency: string;
   createdAt: string;
   paidAt: string | null;
-  paymentMethod?: 'CARD' | 'MOBILE_MONEY';
+  paymentMethod?: 'CARD' | 'MOBILE_MONEY' | 'PAYPAL';
   items: { ebookId: string; title: string; priceCents: number; kind?: ProductKind; shippingCents?: number; seller?: { id: string; name: string } | null }[];
   shipments?: Shipment[];
   shippingAddress?: Address | null;
@@ -347,4 +347,5 @@ export interface PublicConfig {
   supportEmail: string | null;
   legal: { terms: string | null; salesTerms: string | null; privacy: string | null; legalNotice: string | null };
   mobileMoney?: { enabled: boolean; countries: MobileMoneyCountry[] };
+  paypal?: { enabled: boolean; currencies: string[] };
 }

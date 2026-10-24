@@ -17,6 +17,7 @@ interface Settings {
   privacyUrl: string | null;
   legalNoticeUrl: string | null;
   commissionPercent: number;
+  paypalEnabled: boolean;
 }
 
 const MODES: [Mode, string][] = [
@@ -95,6 +96,11 @@ export default function SettingsPage() {
               <input id="commission" className="input" inputMode="decimal" value={s.commissionPercent} onChange={(e) => set('commissionPercent', Number(e.target.value.replace(',', '.')) || 0)} style={{ maxWidth: 200 }} />
               <span className="hint">Calculée sur le prix du livre, hors frais de livraison. Les livres de la plateforme n’en ont pas. Entre 0 et 50 %.</span>
             </div>
+            <label className="check">
+              <input type="checkbox" checked={!!s.paypalEnabled} onChange={(e) => set('paypalEnabled', e.target.checked)} />
+              Proposer PayPal aux acheteurs (commandes en euros)
+            </label>
+            <span className="hint" style={{ marginTop: -8 }}>À activer une fois les clés PayPal configurées (PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID).</span>
           </section>
           <section className="card grid" style={{ gap: 14 }}>
             <h2 style={{ margin: 0 }}>Limites d’accès</h2>
@@ -103,7 +109,7 @@ export default function SettingsPage() {
               <input id="dev" className="input" inputMode="numeric" value={s.maxDevices ?? ''} onChange={(e) => set('maxDevices', num(e.target.value))} placeholder="Illimité" style={{ maxWidth: 200 }} />
             </div>
             <div className="field">
-              <label htmlFor="dl">Téléchargements maximum par e-book et par client</label>
+              <label htmlFor="dl">Téléchargements maximum par livre et par client</label>
               <input id="dl" className="input" inputMode="numeric" value={s.maxDownloadsPerBook ?? ''} onChange={(e) => set('maxDownloadsPerBook', num(e.target.value))} placeholder="Illimité" style={{ maxWidth: 200 }} />
               <span className="hint">Laisser vide pour ne pas limiter.</span>
             </div>

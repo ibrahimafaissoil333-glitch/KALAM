@@ -1,7 +1,7 @@
 // Crée une commande PENDING (prix figés, stock réservé) et lance le paiement : session carte,
-// ou demande Mobile Money envoyée sur le téléphone de l'acheteur. L'accès n'est PAS accordé ici.
+// PayPal, ou demande Mobile Money envoyée sur le téléphone de l'acheteur. L'accès n'est PAS accordé ici.
 import { check, env, handler, HttpError, json, serviceClient, userFromRequest } from '../_shared/http.ts';
-import { provider, safeReturnUrl } from '../_shared/payments.ts';
+import { paypalProvider, provider, safeReturnUrl } from '../_shared/payments.ts';
 import { maskMsisdn, mobileMoneyProvider, normalizeMsisdn } from '../_shared/mobile-money.ts';
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -14,7 +14,9 @@ Deno.serve(handler(async (req) => {
   if (idem && idem.length > 100) throw new HttpError(400, 'Idempotency-Key trop longue.');
   const ebookIds = Array.isArray(body.ebookIds) ? body.ebookIds.filter((x: unknown) => typeof x === 'string' && UUID.test(x)).slice(0, 50) : [];
   const platform = ['ios', 'android', 'web'].includes(body.platform) ? body.platform : null;
-  const method = body.paymentMethod === 'MOBILE_MONEY' ? 'MOBILE_MONEY' : 'CARD';
+  const method = body.paymentMethod === 'MOBILE_MONEY' ? 'MOBILE_MONEY' : body.paymentMethod === 'PAYPAL' ? 'PAYPAL' : 'CARD';
+  const paypal = method === 'PAYPAL' ? paypalProvider() : null;
+  if (method === 'PAYPAL' && !paypal) throw new HttpError(503, 'Le paiement PayPal n’est pas encore configuré.');
   const shipping: Record<string, string> = {};
   for (const [k, v] of Object.entries(body.shipping ?? {})) if (UUID.test(k) && typeof v === 'string' && UUID.test(v)) shipping[k] = v;
   const addressId = typeof body.addressId === 'string' && UUID.test(body.addressId) ? body.addressId : null;
@@ -68,7 +70,7 @@ Deno.serve(handler(async (req) => {
     return json({ order: view, checkoutUrl: null, mobileMoney: { operator: mm.operator, masked: maskMsisdn(mm.msisdn) } }, 201);
   }
 
-  const pay = provider();
+  const pay = paypal ?? provider();
   const returnUrl = safeReturnUrl(body.returnUrl);
   const session = await pay.createSession({
     orderId: order.id, reference: order.reference, customerEmail: user.email ?? '', currency: order.currency,
@@ -79,7 +81,7 @@ Deno.serve(handler(async (req) => {
     returnUrl,
   });
   check(await db.from('payments').insert({
-    order_id: order.id, provider: pay.name, provider_session_id: session.sessionId, amount_cents: order.total_cents, currency: order.currency, return_url: returnUrl,
+    order_id: order.id, provider: pay.name, provider_session_id: session.sessionId, amount_cents: order.total_cents, currency: order.currency, return_url: returnUrl, method,
   }));
   return json({ order: view, checkoutUrl: session.url }, 201);
 }));

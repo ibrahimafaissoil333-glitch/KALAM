@@ -29,7 +29,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   const refund = async () => {
     const ok = await confirm({
       title: 'Rembourser cette commande ?',
-      body: `Le client sera remboursé de ${money(o.totalCents, o.currency)} et perdra l’accès aux e-books de cette commande. Un e-mail lui sera envoyé.`,
+      body: `Le client sera remboursé de ${money(o.totalCents, o.currency)} et perdra l’accès aux livres de cette commande. Un e-mail lui sera envoyé.`,
       confirm: 'Rembourser',
       danger: true,
     });
@@ -68,7 +68,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
         <div className="grid" style={{ gap: 16 }}>
           <section className="card" style={{ padding: 0 }}>
             <table className="t" style={{ border: 0 }}>
-              <thead><tr><th>E-book</th><th className="num">Prix</th></tr></thead>
+              <thead><tr><th>Livre</th><th className="num">Prix</th></tr></thead>
               <tbody>
                 {o.items.map((i) => (
                   <tr key={i.ebookId}><td><Link href={`/ebooks/${i.ebookId}`}>{i.title}</Link></td><td className="num">{money(i.priceCents, o.currency)}</td></tr>

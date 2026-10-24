@@ -5,8 +5,8 @@ import { Button, Card, Divider, ScreenHeader, T } from '@/ui/components';
 import { gutter } from '@/ui/theme';
 
 const FAQ = [
-  ['Où sont mes e-books ?', 'Dans l’onglet Bibliothèque, dès que le paiement est confirmé. Connectez-vous avec le même compte sur tous vos appareils.'],
-  ['Mon paiement est « en vérification »', 'Nous attendons la confirmation du prestataire de paiement. Vous recevrez un e-mail dès qu’elle arrive, et l’e-book apparaîtra automatiquement.'],
+  ['Où sont mes livres ?', 'Dans l’onglet Bibliothèque, dès que le paiement est confirmé. Connectez-vous avec le même compte sur tous vos appareils.'],
+  ['Mon paiement est « en vérification »', 'Nous attendons la confirmation du prestataire de paiement. Vous recevrez un e-mail dès qu’elle arrive, et le livre apparaîtra automatiquement.'],
   ['Lire sans connexion', 'Dans la bibliothèque, touchez l’icône de téléchargement. Le contenu est chiffré et reste sur cet appareil.'],
   ['Mon paiement a échoué', 'Aucun montant n’est débité et votre panier est conservé. Vérifiez votre carte ou essayez un autre moyen de paiement.'],
   ['Changer la taille du texte', 'Dans le lecteur, touchez « Tт » : taille et interligne sont réglables.'],

@@ -47,7 +47,7 @@ export default function HomeScreen() {
         </View>
       ) : (
       <View style={{ paddingHorizontal: gutter, paddingTop: 12 }}>
-        <View style={{ backgroundColor: color.ink, borderRadius: 24, padding: 22, paddingTop: 24, minHeight: 248, overflow: 'hidden' }}>
+        <View style={{ backgroundColor: color.night, borderRadius: 24, padding: 22, paddingTop: 24, minHeight: 248, overflow: 'hidden' }}>
           <View style={{ width: 200, gap: 14, zIndex: 1 }}>
             <T weight="bold" style={{ fontSize: 12, letterSpacing: 1.7, textTransform: 'uppercase', color: color.gold }}>{user ? `Bonjour ${user.name}` : 'Nouveauté'}</T>
             <T serif accessibilityRole="header" style={{ color: '#FFFFFF', fontSize: 34, lineHeight: 35 }}>Achetez, puis lisez dans la minute.</T>

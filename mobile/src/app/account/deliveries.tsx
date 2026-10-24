@@ -6,12 +6,12 @@ import { useQuery } from '@/lib/use-query';
 import { Button, Card, EmptyState, ErrorBanner, ScreenHeader, Skeleton, T, useToast } from '@/ui/components';
 import { color, gutter } from '@/ui/theme';
 
-const SHIPMENT: Record<Shipment['status'], [string, string, string]> = {
+const shipmentStyle = (): Record<Shipment['status'], [string, string, string]> => ({
   TO_SHIP: ['En préparation', color.warningSoft, color.warningText],
   SHIPPED: ['Expédié', color.accentSoft, color.accentText],
   DELIVERED: ['Reçu', color.successSoft, color.successText],
   CANCELED: ['Annulé', color.neutralSoft, color.neutralText],
-};
+});
 
 /** Livres physiques achetés : suivi de l'envoi et confirmation de réception. */
 export default function DeliveriesScreen() {
@@ -52,7 +52,7 @@ export default function DeliveriesScreen() {
           <T muted style={{ fontSize: 13 }}>{shortDate(o.createdAt)}</T>
           {o.items.filter((i) => i.kind === 'PHYSICAL').map((i) => <T key={i.ebookId} style={{ fontSize: 15 }}>• {i.title}</T>)}
           {o.shipments?.map((s) => {
-            const [label, bg, fg] = SHIPMENT[s.status];
+            const [label, bg, fg] = shipmentStyle()[s.status];
             return (
               <View key={s.id} style={{ gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: color.divider }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -36,10 +36,10 @@ export default function DeleteAccount() {
     <ScrollView contentContainerStyle={{ paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
       <ScreenHeader back title="Supprimer mon compte" />
       <View style={{ paddingHorizontal: gutter, gap: 20, paddingTop: 8 }}>
-        <Card style={{ padding: 16, gap: 8, backgroundColor: color.dangerSoft, borderColor: '#F0C4C6' }}>
+        <Card style={{ padding: 16, gap: 8, backgroundColor: color.dangerSoft, borderColor: color.dangerBorder }}>
           <T weight="bold" style={{ color: color.dangerText }}>Cette action est définitive</T>
           <T style={{ fontSize: 14, lineHeight: 20, color: color.dangerText }}>
-            Vous perdrez l’accès à tous vos e-books, sur tous vos appareils. Vos données personnelles seront effacées ; les factures sont conservées le temps imposé par la loi, sans lien avec votre identité.
+            Vous perdrez l’accès à tous vos livres, sur tous vos appareils. Vos données personnelles seront effacées ; les factures sont conservées le temps imposé par la loi, sans lien avec votre identité.
           </T>
         </Card>
         {error && <ErrorBanner message={error} />}

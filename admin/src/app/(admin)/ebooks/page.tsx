@@ -29,9 +29,9 @@ export default function EbooksPage() {
 
   return (
     <>
-      <PageHead title="E-books" sub={data ? `${data.length} e-book${data.length > 1 ? 's' : ''}` : ' '}>
+      <PageHead title="Livres" sub={data ? `${data.length} livre${data.length > 1 ? 's' : ''}` : ' '}>
         <Link href="/ebooks/new" className="btn btn-acc">
-          Nouvel e-book
+          Nouveau livre
         </Link>
       </PageHead>
       <div className="row" style={{ marginBottom: 16 }}>
@@ -48,15 +48,15 @@ export default function EbooksPage() {
       {error && <ErrorState message={error} retry={reload} />}
       {loading && !data && <Skeleton />}
       {data && data.length === 0 && (
-        <Empty title="Aucun e-book">
-          <p>Modifiez la recherche ou créez votre premier e-book.</p>
+        <Empty title="Aucun livre">
+          <p>Modifiez la recherche ou créez votre premier livre.</p>
         </Empty>
       )}
       {data && data.length > 0 && (
         <table className="t">
           <thead>
             <tr>
-              <th>E-book</th>
+              <th>Livre</th>
               <th>Type</th>
               <th>Vendeur</th>
               <th>Catégorie</th>

@@ -1,14 +1,15 @@
 // Webhook du prestataire : SEULE source de confirmation de paiement. Signature vérifiée, idempotent.
-// Carte : /payment-webhook ; Mobile Money : /payment-webhook?provider=mobile_money (callback opérateur).
+// Carte : /payment-webhook ; PayPal : ?provider=paypal ; Mobile Money : ?provider=mobile_money (callback opérateur).
 // Les interrupteurs admin ne s'appliquent pas ici : un paiement déjà lancé est toujours traité.
 import { check, handler, HttpError, json, serviceClient } from '../_shared/http.ts';
-import { InvalidSignature, provider, WebhookEvent } from '../_shared/payments.ts';
+import { InvalidSignature, paypalProvider, provider, WebhookEvent } from '../_shared/payments.ts';
 import { mobileMoneyProvider } from '../_shared/mobile-money.ts';
 
 Deno.serve(handler(async (req) => {
   if (req.method !== 'POST') throw new HttpError(405, 'Méthode non autorisée.');
   const raw = await req.text();
-  const isMobileMoney = new URL(req.url).searchParams.get('provider') === 'mobile_money';
+  const source = new URL(req.url).searchParams.get('provider');
+  const isMobileMoney = source === 'mobile_money';
   let name: string;
   let ev: WebhookEvent;
   try {
@@ -17,7 +18,8 @@ Deno.serve(handler(async (req) => {
       name = mm.name;
       ev = await mm.parseCallback(raw, req.headers);
     } else {
-      const pay = provider();
+      const pay = source === 'paypal' ? paypalProvider() : provider();
+      if (!pay) throw new HttpError(404, 'PayPal non configuré.');
       name = pay.name;
       ev = await pay.parseWebhook(raw, req.headers);
     }

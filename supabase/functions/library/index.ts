@@ -7,16 +7,16 @@ Deno.serve(handler(async (req) => {
   if (req.method !== 'POST') throw new HttpError(405, 'Méthode non autorisée.');
   const { user } = await userFromRequest(req);
   const { action, ebookId } = await req.json().catch(() => ({}));
-  if (typeof ebookId !== 'string' || !/^[0-9a-f-]{36}$/i.test(ebookId)) throw new HttpError(400, 'E-book invalide.');
+  if (typeof ebookId !== 'string' || !/^[0-9a-f-]{36}$/i.test(ebookId)) throw new HttpError(400, 'Livre invalide.');
   const db = serviceClient();
   const { data: ent } = await db.from('entitlements').select('id').eq('user_id', user.id).eq('ebook_id', ebookId).is('revoked_at', null).maybeSingle();
-  if (!ent) throw new HttpError(403, "Vous n'avez pas accès à cet e-book.");
+  if (!ent) throw new HttpError(403, "Vous n'avez pas accès à ce livre.");
   const ebook = check(await db.from('ebooks').select('id, slug, download_allowed, ebook_files(*)').eq('id', ebookId).single());
   const file = (kind: string) => ebook.ebook_files.filter((f: { kind: string }) => f.kind === kind).sort((a: { created_at: string }, b: { created_at: string }) => b.created_at.localeCompare(a.created_at))[0];
 
   if (action === 'content') {
     const f = file('CONTENT');
-    if (!f) throw new HttpError(404, "Le contenu de cet e-book n'est pas encore disponible.");
+    if (!f) throw new HttpError(404, "Le contenu de ce livre n'est pas encore disponible.");
     const { data, error } = await db.storage.from('ebooks').download(f.storage_path);
     if (error || !data) throw new HttpError(404, 'Contenu introuvable.');
     await db.from('download_events').insert({ user_id: user.id, ebook_id: ebookId, kind: 'read' });
@@ -24,14 +24,14 @@ Deno.serve(handler(async (req) => {
   }
 
   if (action === 'download') {
-    if (!ebook.download_allowed) throw new HttpError(403, "Le téléchargement du fichier n'est pas proposé pour cet e-book.");
+    if (!ebook.download_allowed) throw new HttpError(403, "Le téléchargement du fichier n'est pas proposé pour ce livre.");
     const f = file('MAIN');
     if (!f) throw new HttpError(404, 'Fichier indisponible.');
     const settings = check(await db.rpc('app_settings')) as { maxDownloadsPerBook: number | null };
     if (settings.maxDownloadsPerBook !== null) {
       const { count } = await db.from('download_events').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('ebook_id', ebookId).eq('kind', 'download');
       if ((count ?? 0) >= settings.maxDownloadsPerBook) {
-        throw new HttpError(429, `Limite de ${settings.maxDownloadsPerBook} téléchargements atteinte pour cet e-book. Contactez le support.`);
+        throw new HttpError(429, `Limite de ${settings.maxDownloadsPerBook} téléchargements atteinte pour ce livre. Contactez le support.`);
       }
     }
     await db.from('download_events').insert({ user_id: user.id, ebook_id: ebookId, kind: 'download' });

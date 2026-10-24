@@ -3,7 +3,7 @@
 import { check, handler, HttpError, json, serviceClient, userFromRequest } from '../_shared/http.ts';
 import { decryptSecret } from '../_shared/crypto.ts';
 import { removeStoredFiles, uploadBookFile } from '../_shared/files.ts';
-import { provider } from '../_shared/payments.ts';
+import { paypalProvider, provider } from '../_shared/payments.ts';
 
 const VIDEO_TYPES: Record<string, string> = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' };
 
@@ -46,8 +46,9 @@ Deno.serve(handler(async (req) => {
       const order = check(await db.from('orders').select('id, status, payment_method, payments(provider, provider_payment_id, status)').eq('id', body.orderId).single());
       if (order.status !== 'PAID') throw new HttpError(409, 'Seule une commande confirmée peut être remboursée.');
       const paid = order.payments.find((p: { status: string }) => p.status === 'SUCCEEDED');
-      // Carte : remboursement chez le prestataire. Mobile Money : renvoi manuel par l'admin (pas d'API de remboursement commune).
+      // Carte et PayPal : remboursement chez le prestataire. Mobile Money : renvoi manuel par l'admin (pas d'API de remboursement commune).
       if (order.payment_method === 'CARD' && paid?.provider_payment_id) await provider().refund(paid.provider_payment_id);
+      if (order.payment_method === 'PAYPAL' && paid?.provider_payment_id) await paypalProvider()?.refund(paid.provider_payment_id);
       check(await db.rpc('svc_mark_refunded', { p_order: order.id, p_actor: user.id }));
       return json(check(await client.rpc('admin_order', { p_id: order.id })));
     }

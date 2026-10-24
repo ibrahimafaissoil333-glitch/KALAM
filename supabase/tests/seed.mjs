@@ -46,4 +46,4 @@ for (const [email, password, name, role] of [
   if (error && !/already/i.test(error.message)) throw error;
   if (data?.user && role === 'ADMIN') await db.from('profiles').update({ role }).eq('id', data.user.id);
 }
-console.log(`Démo prête : ${BOOKS.length} e-books, ${CATEGORIES.length} catégories, comptes SEED_* du .env.`);
+console.log(`Démo prête : ${BOOKS.length} livres, ${CATEGORIES.length} catégories, comptes SEED_* du .env.`);

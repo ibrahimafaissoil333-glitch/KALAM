@@ -116,7 +116,7 @@ export function EbookEditor({ id }: { id?: string }) {
       } else {
         const created = await api<EbookDetail>('admin/ebooks', { method: 'POST', json: payload() });
         setDirty(false);
-        toast('E-book créé');
+        toast('Livre créé');
         router.replace(`/ebooks/${created.id}`);
       }
       return true;
@@ -164,7 +164,7 @@ export function EbookEditor({ id }: { id?: string }) {
     try {
       await api(`admin/ebooks/${id}`, { method: 'DELETE' });
       setDirty(false);
-      toast('E-book supprimé');
+      toast('Livre supprimé');
       router.replace('/ebooks');
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'Suppression impossible.');
@@ -191,19 +191,19 @@ export function EbookEditor({ id }: { id?: string }) {
   return (
     <form onSubmit={save} noValidate>
       <PageHead
-        title={id ? form.title || 'E-book' : 'Nouvel e-book'}
+        title={id ? form.title || 'Livre' : 'Nouveau livre'}
         sub={data ? <span className="row"><Status value={data.status} /> {data.sales} vente(s) · modifié le {date(data.updatedAt, true)}</span> : 'Enregistré comme brouillon'}
       >
         <button type="submit" className="btn btn-ghost" disabled={saving}>
           Enregistrer le brouillon
         </button>
         {data && data.status !== 'PUBLISHED' && (
-          <button type="button" className="btn btn-acc" disabled={saving} onClick={() => action('publish', 'E-book publié', { title: 'Publier cet e-book ?', body: 'Il sera visible et achetable dans le catalogue.', confirm: 'Publier' })}>
+          <button type="button" className="btn btn-acc" disabled={saving} onClick={() => action('publish', 'Livre publié', { title: 'Publier ce livre ?', body: 'Il sera visible et achetable dans le catalogue.', confirm: 'Publier' })}>
             Publier
           </button>
         )}
         {data?.status === 'PUBLISHED' && (
-          <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => action('unpublish', 'E-book dépublié', { title: 'Dépublier ?', body: 'Il disparaîtra du catalogue. Les clients qui l’ont acheté pourront toujours le lire.', confirm: 'Dépublier' })}>
+          <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => action('unpublish', 'Livre dépublié', { title: 'Dépublier ?', body: 'Il disparaîtra du catalogue. Les clients qui l’ont acheté pourront toujours le lire.', confirm: 'Dépublier' })}>
             Dépublier
           </button>
         )}
@@ -288,7 +288,7 @@ export function EbookEditor({ id }: { id?: string }) {
                   <span className="hint">{fileOf('COVER') ? `Actuelle : ${fileOf('COVER')!.originalName}` : 'Sans image : couverture générée avec les couleurs ci-dessus'}</span>
                 </div>
                 <div className="field">
-                  <label htmlFor="main-file">Fichier de l’e-book (EPUB recommandé, ou PDF)</label>
+                  <label htmlFor="main-file">Fichier de le livre (EPUB recommandé, ou PDF)</label>
                   <input id="main-file" type="file" accept=".epub,application/epub+zip,application/pdf" disabled={saving} onChange={(e) => upload('main', e.target.files?.[0])} />
                   <span className="hint">
                     {fileOf('MAIN') ? `${fileOf('MAIN')!.originalName} · ${(fileOf('MAIN')!.sizeBytes / 1024).toFixed(0)} Ko` : 'Aucun fichier'}
@@ -304,7 +304,7 @@ export function EbookEditor({ id }: { id?: string }) {
             <section className="card grid" style={{ gap: 10 }}>
               <h2 style={{ margin: 0 }}>Zone sensible</h2>
               {data.status !== 'ARCHIVED' && (
-                <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => action('archive', 'E-book archivé', { title: 'Archiver cet e-book ?', body: 'Il sera retiré du catalogue et de la sélection. Les acheteurs gardent leur accès.', confirm: 'Archiver' })}>
+                <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => action('archive', 'Livre archivé', { title: 'Archiver ce livre ?', body: 'Il sera retiré du catalogue et de la sélection. Les acheteurs gardent leur accès.', confirm: 'Archiver' })}>
                   Archiver
                 </button>
               )}

@@ -84,7 +84,7 @@ export function StatsView({ dashboard = false }: { dashboard?: boolean }) {
               <WeeklyBars weekly={s.weekly} currency={s.currency} />
             </section>
             <section className="card">
-              <h2>E-books les plus vendus</h2>
+              <h2>Livres les plus vendus</h2>
               {s.topEbooks.every((t) => t.sales === 0 && t.views === 0) ? (
                 <p className="muted">Pas encore de données.</p>
               ) : (

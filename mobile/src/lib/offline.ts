@@ -77,7 +77,7 @@ export async function removeOffline(ebookId: string) {
 }
 
 /**
- * Synchronise avec les droits du serveur : un e-book remboursé ou retiré est effacé de l'appareil,
+ * Synchronise avec les droits du serveur : un livre remboursé ou retiré est effacé de l'appareil,
  * et une version de contenu obsolète est supprimée (elle sera retéléchargée).
  */
 export async function reconcileOffline(owned: { id: string; contentVersion: string | null }[]) {

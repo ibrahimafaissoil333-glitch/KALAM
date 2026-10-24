@@ -1,4 +1,5 @@
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { color as palette } from './theme';
 
 /** Icônes du prototype (trait 1,8, coins arrondis). Décoratives : masquées aux lecteurs d'écran. */
 export type IconName =
@@ -6,7 +7,7 @@ export type IconName =
   | 'lock' | 'check' | 'close' | 'books' | 'mail' | 'download' | 'home' | 'grid' | 'sort' | 'alert' | 'clock'
   | 'list' | 'text' | 'logout' | 'help' | 'doc' | 'device' | 'bell' | 'offline' | 'tag' | 'truck' | 'wallet' | 'phone' | 'plus' | 'edit';
 
-export function Icon({ name, size = 22, color = '#182840', stroke = 1.8 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
+export function Icon({ name, size = 22, color = palette.ink, stroke = 1.8 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
   const p = { fill: 'none', stroke: color, strokeWidth: stroke, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   const paths: Record<IconName, React.ReactNode> = {
     user: <><Circle cx="12" cy="8" r="4" {...p} /><Path d="M4 21a8 8 0 0 1 16 0" {...p} /></>,

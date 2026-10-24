@@ -6,7 +6,8 @@ import { api, errorMessage, Order } from '@/lib/api';
 import { money, plural, shortDate } from '@/lib/format';
 import { useStore } from '@/lib/store';
 import { Button, Card, Divider, EmptyState, ErrorBanner, RowLink, ScreenHeader, StatusPill, Switch, T, useToast } from '@/ui/components';
-import { color, gutter } from '@/ui/theme';
+import { useAppearance } from '@/ui/appearance';
+import { color, gutter, scheme } from '@/ui/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Prefs {
@@ -68,7 +69,7 @@ export default function AccountScreen() {
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 12, paddingHorizontal: gutter, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-        <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: color.ink, alignItems: 'center', justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: color.night, alignItems: 'center', justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           <T serif style={{ fontSize: 28, color: color.gold }}>{user.name.charAt(0).toUpperCase()}</T>
         </View>
         <View style={{ flex: 1 }}>
@@ -114,11 +115,13 @@ export default function AccountScreen() {
         <Card style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
           <Switch value label="Commandes et compte" sub="Toujours actif, nécessaire au service" disabled />
           <Divider />
-          <Switch value={prefs?.ebookUpdates ?? true} onChange={(v) => setPref('ebookUpdates', v)} label="Mises à jour d’e-books" sub="Quand un e-book acheté est mis à jour" />
+          <Switch value={prefs?.ebookUpdates ?? true} onChange={(v) => setPref('ebookUpdates', v)} label="Mises à jour de livres" sub="Quand un livre acheté est mis à jour" />
           <Divider />
           <Switch value={prefs?.marketing ?? false} onChange={(v) => setPref('marketing', v)} label="Nouveautés et offres" sub="Avec votre accord uniquement" />
         </Card>
       </View>
+
+      <AppearanceSection />
 
       <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
         <T serif accessibilityRole="header" style={{ fontSize: 26 }}>Paramètres</T>
@@ -140,5 +143,23 @@ export default function AccountScreen() {
         <Button label="Supprimer mon compte" variant="danger" small onPress={() => router.push('/account/delete')} />
       </View>
     </ScrollView>
+  );
+}
+
+/** Thème clair / sombre (suit le téléphone) et mode verre. */
+function AppearanceSection() {
+  const { glass, setGlass } = useAppearance();
+  return (
+    <View style={{ paddingHorizontal: gutter, paddingTop: 24, gap: 10 }}>
+      <T serif accessibilityRole="header" style={{ fontSize: 26 }}>Apparence</T>
+      <Card style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
+        <Switch value={glass} onChange={setGlass} label="Mode verre" sub="Surfaces translucides, comme sur iPhone" />
+        <Divider />
+        <View style={{ paddingVertical: 12 }}>
+          <T weight="semibold" style={{ fontSize: 15 }}>Thème : {scheme === 'dark' ? 'sombre' : 'clair'}</T>
+          <T muted style={{ fontSize: 13 }}>Suit automatiquement le réglage clair ou sombre de votre téléphone.</T>
+        </View>
+      </Card>
+    </View>
   );
 }

@@ -27,6 +27,8 @@ export default function CheckoutResult() {
     let alive = true;
     const tick = async () => {
       try {
+        // Le statut déclenche au besoin la capture côté serveur (PayPal validé, retour interrompu).
+        await api(`orders/${id}/status`).catch(() => undefined);
         const o = await api<Order>(`orders/${id}`);
         if (!alive) return;
         setOrder(o);

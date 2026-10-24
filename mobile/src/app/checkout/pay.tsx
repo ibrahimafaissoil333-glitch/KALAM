@@ -14,11 +14,11 @@ import { Button, Card, Checkbox, Choice, Cover, ErrorBanner, InfoNote, LinkButto
 import { Icon, IconName } from '@/ui/icons';
 import { color, gutter } from '@/ui/theme';
 
-type Method = 'CARD' | 'MOBILE_MONEY';
+type Method = 'CARD' | 'MOBILE_MONEY' | 'PAYPAL';
 
 /**
  * Paiement : la commande est créée côté serveur (prix figés, stock réservé), puis
- * - carte : la page sécurisée du prestataire s'ouvre dans un navigateur intégré ;
+ * - carte ou PayPal : la page sécurisée du prestataire s'ouvre dans un navigateur intégré ;
  * - Mobile Money : l'opérateur envoie une demande de confirmation sur le téléphone de l'acheteur.
  * Le résultat n'est JAMAIS déduit côté app : seul le serveur, informé par webhook, fait foi.
  */
@@ -52,9 +52,11 @@ export default function PayScreen() {
   const [phoneError, setPhoneError] = useState<string | undefined>();
   const country = mmCountries.find((c) => c.code === (mmCountry ?? mmCountries[0]?.code));
 
+  // PayPal : activé par l'admin, et seulement pour les commandes en euros.
+  const paypalOk = !!config?.paypal?.enabled && (config.paypal.currencies ?? []).includes(cart.currency);
   useEffect(() => {
-    if (mmCountries.length === 0) setMethod('CARD');
-  }, [mmCountries.length]);
+    if ((method === 'MOBILE_MONEY' && mmCountries.length === 0) || (method === 'PAYPAL' && !paypalOk)) setMethod('CARD');
+  }, [mmCountries.length, paypalOk, method]);
 
   const shippingCents = physical.reduce((n, e) => n + (e.shipping.find((s) => s.id === shipping[e.id])?.priceCents ?? 0), 0);
   const total = cart.totalCents + shippingCents;
@@ -203,6 +205,7 @@ export default function PayScreen() {
         <T weight="bold" accessibilityRole="header" style={{ fontSize: 17, marginTop: 12 }}>Moyen de paiement</T>
         <View style={{ gap: 10 }} accessibilityRole="radiogroup">
           {methodCard('CARD', 'lock', 'Carte bancaire', 'Page sécurisée de notre prestataire')}
+          {paypalOk && methodCard('PAYPAL', 'wallet', 'PayPal', 'Compte PayPal ou carte via PayPal')}
           {mmCountries.length > 0 && methodCard('MOBILE_MONEY', 'phone', 'Mobile Money', mmCountries.flatMap((c) => c.operators.map((o) => o.label)).join(', '))}
         </View>
 
@@ -229,6 +232,9 @@ export default function PayScreen() {
             Le paiement est traité sur la page sécurisée de notre prestataire. {config?.appName ?? 'Kalam'} ne conserve aucune donnée bancaire.
           </InfoNote>
         )}
+        {method === 'PAYPAL' && (
+          <InfoNote icon="shield" tone="box">Vous validez le paiement sur le site de PayPal, puis vous revenez automatiquement dans l’application.</InfoNote>
+        )}
 
         <Checkbox checked={accepted} onChange={(v) => { setAccepted(v); setError(null); }}>
           <T style={{ fontSize: 14, lineHeight: 20 }}>
@@ -241,7 +247,7 @@ export default function PayScreen() {
       </ScrollView>
       <View style={{ padding: gutter, gap: 6 }}>
         <Button
-          label={busy ? (method === 'MOBILE_MONEY' ? 'Envoi de la demande…' : 'Ouverture du paiement sécurisé…') : `Payer ${money(total, cart.currency)}`}
+          label={busy ? (method === 'MOBILE_MONEY' ? 'Envoi de la demande…' : method === 'PAYPAL' ? 'Ouverture de PayPal…' : 'Ouverture du paiement sécurisé…') : method === 'PAYPAL' ? `Payer avec PayPal · ${money(total, cart.currency)}` : `Payer ${money(total, cart.currency)}`}
           variant="accent"
           icon={method === 'MOBILE_MONEY' ? 'phone' : 'lock'}
           loading={busy}
