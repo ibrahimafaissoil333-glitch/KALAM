@@ -1,5 +1,6 @@
 import Stripe from 'npm:stripe@18';
-import { env } from './http.ts';
+import { decryptSecret } from './crypto.ts';
+import { env, serviceClient } from './http.ts';
 
 /** Interface commune aux prestataires de paiement (docs/03b-supabase.md). */
 export interface CheckoutRequest {
@@ -140,9 +141,38 @@ export class StripeProvider implements PaymentProvider {
   }
 }
 
-export function provider(): PaymentProvider {
-  if (env('PAYMENT_PROVIDER', 'fake') === 'stripe') return new StripeProvider(env('STRIPE_SECRET_KEY'), env('STRIPE_WEBHOOK_SECRET'));
-  return new FakeProvider(env('FAKE_WEBHOOK_SECRET'), env('PUBLIC_SUPABASE_URL', env('SUPABASE_URL')));
+/**
+ * Clés de paiement saisies par l'administrateur dans l'admin (page Stripe), chiffrées en base
+ * (réglage « payment_secrets », jamais lisible par l'app). Les variables d'environnement restent prioritaires.
+ */
+export interface StoredKeys {
+  stripe?: { secretKey: string; webhookSecret: string | null };
+  paypal?: { clientId: string; clientSecret: string; webhookId: string | null; mode: string };
+}
+export async function storedKeys(): Promise<StoredKeys> {
+  const { data } = await serviceClient().from('settings').select('value').eq('key', 'payment_secrets').maybeSingle();
+  const v = (data?.value ?? {}) as Record<string, Record<string, string | null>>;
+  const open = async (c?: string | null) => (c ? await decryptSecret(c) : null);
+  const out: StoredKeys = {};
+  try {
+    if (v.stripe?.secretKey) out.stripe = { secretKey: (await open(v.stripe.secretKey))!, webhookSecret: await open(v.stripe.webhookSecret) };
+    if (v.paypal?.clientId) {
+      out.paypal = { clientId: (await open(v.paypal.clientId))!, clientSecret: (await open(v.paypal.clientSecret))!, webhookId: await open(v.paypal.webhookId), mode: v.paypal.mode ?? 'sandbox' };
+    }
+  } catch (err) {
+    console.error('Clés de paiement illisibles (PAYOUT_ENCRYPTION_KEY ?)', err);
+  }
+  return out;
+}
+
+const fake = () => new FakeProvider(env('FAKE_WEBHOOK_SECRET'), env('PUBLIC_SUPABASE_URL', env('SUPABASE_URL')));
+
+/** Paiement par carte : Stripe si ses clés sont configurées (environnement ou admin), sinon simulation. */
+export async function provider(): Promise<PaymentProvider> {
+  if (env('PAYMENT_PROVIDER') === 'stripe' && env('STRIPE_SECRET_KEY')) return new StripeProvider(env('STRIPE_SECRET_KEY'), env('STRIPE_WEBHOOK_SECRET'));
+  const k = (await storedKeys()).stripe;
+  if (k?.secretKey && k.webhookSecret) return new StripeProvider(k.secretKey, k.webhookSecret);
+  return fake();
 }
 
 /** Adresse de retour fournie par l'app, acceptée seulement si son préfixe est autorisé (pas de redirection ouverte). */
@@ -252,9 +282,10 @@ export class PayPalProvider implements PaymentProvider {
   }
 }
 
-/** PayPal : réel si les clés sont configurées, simulation (page de test) si PAYPAL_MODE=fake, sinon indisponible. */
-export function paypalProvider(): PaymentProvider | null {
-  if (env('PAYPAL_MODE') === 'fake') return new FakeProvider(env('FAKE_WEBHOOK_SECRET'), env('PUBLIC_SUPABASE_URL', env('SUPABASE_URL')));
-  if (!env('PAYPAL_CLIENT_ID') || !env('PAYPAL_CLIENT_SECRET')) return null;
-  return new PayPalProvider(env('PAYPAL_CLIENT_ID'), env('PAYPAL_CLIENT_SECRET'), env('PAYPAL_WEBHOOK_ID'), env('PAYPAL_MODE', 'sandbox'));
+/** PayPal : réel si les clés sont configurées (environnement ou admin), simulation si PAYPAL_MODE=fake, sinon indisponible. */
+export async function paypalProvider(): Promise<PaymentProvider | null> {
+  if (env('PAYPAL_MODE') === 'fake') return fake();
+  if (env('PAYPAL_CLIENT_ID') && env('PAYPAL_CLIENT_SECRET')) return new PayPalProvider(env('PAYPAL_CLIENT_ID'), env('PAYPAL_CLIENT_SECRET'), env('PAYPAL_WEBHOOK_ID'), env('PAYPAL_MODE', 'sandbox'));
+  const k = (await storedKeys()).paypal;
+  return k ? new PayPalProvider(k.clientId, k.clientSecret, k.webhookId ?? '', k.mode) : null;
 }

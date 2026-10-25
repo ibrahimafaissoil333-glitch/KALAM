@@ -18,7 +18,7 @@ Deno.serve(handler(async (req) => {
       name = mm.name;
       ev = await mm.parseCallback(raw, req.headers);
     } else {
-      const pay = source === 'paypal' ? paypalProvider() : provider();
+      const pay = source === 'paypal' ? await paypalProvider() : await provider();
       if (!pay) throw new HttpError(404, 'PayPal non configuré.');
       name = pay.name;
       ev = await pay.parseWebhook(raw, req.headers);

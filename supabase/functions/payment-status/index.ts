@@ -33,7 +33,7 @@ Deno.serve(handler(async (req) => {
     status = check(await db.from('orders').select('status').eq('id', order.id).single()).status;
   }
   // PayPal validé mais pas encore capturé (retour interrompu, webhook en retard) : capture ici.
-  const pp = status === 'PENDING' && pay?.method === 'PAYPAL' ? paypalProvider() : null;
+  const pp = status === 'PENDING' && pay?.method === 'PAYPAL' ? await paypalProvider() : null;
   if (pp instanceof PayPalProvider && (await pp.orderStatus(pay.provider_session_id).catch(() => '')) === 'APPROVED') {
     const c = await pp.capture(pay.provider_session_id);
     const event = `poll_${pay.provider_session_id}`;

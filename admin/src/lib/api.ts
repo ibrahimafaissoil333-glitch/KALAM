@@ -82,6 +82,7 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   if (p === 'admin/mobile-money/log') return rpc('admin_mobile_money_log');
   // Paiements de la plateforme : configuration (sans clés) et revenus de l'administrateur
   if (p === 'admin/payments-config') return adminFn({ action: 'payments-config' });
+  if (p === 'admin/payment-keys') return method === 'DELETE' ? adminFn({ action: 'clear-payment-keys', provider: b.provider }) : adminFn({ action: 'save-payment-keys', ...b });
   if (p === 'admin/revenue') return rpc('admin_platform_revenue');
   // Vendeurs : ventes et modération des annonces
   if (p === 'admin/sellers') return rpc('admin_sellers', { p_q: opt('q') });

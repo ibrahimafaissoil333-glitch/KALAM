@@ -15,7 +15,7 @@ Deno.serve(handler(async (req) => {
   const ebookIds = Array.isArray(body.ebookIds) ? body.ebookIds.filter((x: unknown) => typeof x === 'string' && UUID.test(x)).slice(0, 50) : [];
   const platform = ['ios', 'android', 'web'].includes(body.platform) ? body.platform : null;
   const method = body.paymentMethod === 'MOBILE_MONEY' ? 'MOBILE_MONEY' : body.paymentMethod === 'PAYPAL' ? 'PAYPAL' : 'CARD';
-  const paypal = method === 'PAYPAL' ? paypalProvider() : null;
+  const paypal = method === 'PAYPAL' ? await paypalProvider() : null;
   if (method === 'PAYPAL' && !paypal) throw new HttpError(503, 'Le paiement PayPal n’est pas encore configuré.');
   const shipping: Record<string, string> = {};
   for (const [k, v] of Object.entries(body.shipping ?? {})) if (UUID.test(k) && typeof v === 'string' && UUID.test(v)) shipping[k] = v;
@@ -70,7 +70,7 @@ Deno.serve(handler(async (req) => {
     return json({ order: view, checkoutUrl: null, mobileMoney: { operator: mm.operator, masked: maskMsisdn(mm.msisdn) } }, 201);
   }
 
-  const pay = paypal ?? provider();
+  const pay = paypal ?? (await provider());
   const returnUrl = safeReturnUrl(body.returnUrl);
   const session = await pay.createSession({
     orderId: order.id, reference: order.reference, customerEmail: user.email ?? '', currency: order.currency,

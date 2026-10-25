@@ -44,4 +44,34 @@ describe('Compte de la plateforme (Stripe de l’administrateur)', () => {
     assert.match(r.body.card.webhookUrl, /\/functions\/v1\/payment-webhook$/);
     assert.equal(/sk_(test|live)_|whsec_/.test(r.text), false, 'aucun secret renvoyé');
   });
+
+  it('l’admin saisit ses clés Stripe et PayPal quand il veut : vérifiées, chiffrées, jamais réaffichées', async () => {
+    const admin = await env.admin();
+    const user = await env.register('Client');
+    const key = 'sk_test_' + 'A1b2C3d4E5f6G7h8I9j0K1l2';
+    const hook = 'whsec_' + 'Z9y8X7w6V5u4T3s2';
+    assert.equal((await env.fn('admin', { token: user.token, body: { action: 'save-payment-keys', provider: 'stripe', secretKey: key, webhookSecret: hook } })).status, 403);
+    assert.equal((await env.fn('admin', { token: admin.token, body: { action: 'save-payment-keys', provider: 'stripe', secretKey: 'cle-au-hasard', webhookSecret: hook } })).status, 400);
+    const saved = await env.fn('admin', { token: admin.token, body: { action: 'save-payment-keys', provider: 'stripe', secretKey: key, webhookSecret: hook } });
+    assert.equal(saved.status, 200, saved.text);
+    assert.equal(saved.text.includes(key), false);
+
+    const { rows: [row] } = await env.sql.query("select value::text v from public.settings where key = 'payment_secrets'");
+    assert.equal(row.v.includes('sk_test_') || row.v.includes('whsec_'), false, 'clés chiffrées en base');
+    // Les clés ne sortent par aucune fonction lisible côté client.
+    assert.equal(JSON.stringify((await admin.c.rpc('admin_get_settings')).data).includes('payment_secrets'), false);
+    assert.equal((await user.c.from('settings').select('*')).data.length, 0);
+
+    let cfg = (await env.fn('admin', { token: admin.token, body: { action: 'payments-config' } })).body;
+    assert.deepEqual([cfg.card.provider, cfg.card.source, cfg.card.mode, cfg.card.keyHint, cfg.card.webhookConfigured], ['stripe', 'admin', 'test', '••••K1l2', true]);
+
+    await env.fn('admin', { token: admin.token, body: { action: 'save-payment-keys', provider: 'paypal', clientId: 'A'.repeat(30), clientSecret: 'B'.repeat(30), mode: 'live' } });
+    cfg = (await env.fn('admin', { token: admin.token, body: { action: 'payments-config' } })).body;
+    assert.deepEqual([cfg.paypal.configured, cfg.paypal.mode, cfg.paypal.source], [true, 'live', 'admin']);
+
+    await env.fn('admin', { token: admin.token, body: { action: 'clear-payment-keys', provider: 'stripe' } });
+    await env.fn('admin', { token: admin.token, body: { action: 'clear-payment-keys', provider: 'paypal' } });
+    cfg = (await env.fn('admin', { token: admin.token, body: { action: 'payments-config' } })).body;
+    assert.deepEqual([cfg.card.provider, cfg.paypal.configured], ['fake', false], 'retour en simulation');
+  });
 });

@@ -5,7 +5,7 @@ import { FakeProvider, provider } from '../_shared/payments.ts';
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 Deno.serve(handler(async (req) => {
-  const pay = provider();
+  const pay = await provider();
   if (!(pay instanceof FakeProvider) || env('FAKE_CHECKOUT_ENABLED', 'true') !== 'true') throw new HttpError(404, 'Introuvable.');
   const parts = new URL(req.url).pathname.split('/').filter(Boolean);
   const i = parts.indexOf('fake-checkout');

@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { FormEvent, useState } from 'react';
 import { ErrorState, PageHead, Skeleton, useUi } from '@/components/ui';
-import { money, useApi } from '@/lib/api';
+import { api, money, useApi } from '@/lib/api';
 
 interface Config {
-  card: { provider: 'stripe' | 'fake'; keyConfigured: boolean; mode: 'live' | 'test' | null; webhookConfigured: boolean; automaticTax: boolean; webhookUrl: string; events: string[] };
-  paypal: { configured: boolean; mode: string; webhookUrl: string };
+  card: { provider: 'stripe' | 'fake'; source: 'env' | 'admin' | null; keyHint: string | null; keyConfigured: boolean; mode: 'live' | 'test' | null; webhookConfigured: boolean; automaticTax: boolean; webhookUrl: string; events: string[] };
+  paypal: { configured: boolean; source: 'env' | 'admin' | null; mode: string; keyHint: string | null; webhookConfigured: boolean; webhookUrl: string };
   mobileMoney: { provider: string };
 }
 interface Revenue {
@@ -50,7 +51,8 @@ export default function StripePage() {
             {cfg.data.card.mode === 'live' && <div className="alert alert-ok">Clé réelle : les paiements sont encaissés sur votre compte Stripe.</div>}
             <Check ok={cfg.data.card.keyConfigured} label="Clé secrète Stripe (STRIPE_SECRET_KEY)" hint="Tableau de bord Stripe → Développeurs → Clés API." />
             <Check ok={cfg.data.card.webhookConfigured} label="Secret du webhook (STRIPE_WEBHOOK_SECRET)" hint="Créé à l’ajout du webhook ci-dessous (commence par whsec_)." />
-            <Check ok={cfg.data.card.provider === 'stripe'} label="Stripe activé (PAYMENT_PROVIDER=stripe)" />
+            <Check ok={cfg.data.card.provider === 'stripe'} label="Paiement par carte actif" hint={cfg.data.card.keyHint ? `Clé enregistrée ${cfg.data.card.keyHint}${cfg.data.card.source === 'env' ? ' (secrets du serveur)' : ''}` : 'Saisissez vos clés ci-dessous quand vous êtes prêt.'} />
+            <KeysForm provider="stripe" configured={cfg.data.card.source === 'admin'} locked={cfg.data.card.source === 'env'} onDone={cfg.reload} />
             <div className="field">
               <label>Adresse du webhook à déclarer dans Stripe</label>
               <div className="row" style={{ gap: 8, flexWrap: 'nowrap' }}>
@@ -65,7 +67,7 @@ export default function StripePage() {
               <a className="btn btn-ghost" href="https://dashboard.stripe.com/settings/payouts" target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start' }}>Gérer mon compte bancaire dans Stripe</a>
             </div>
             <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-              Les clés ne sont jamais enregistrées dans l’application : elles sont placées dans les secrets du serveur (Supabase → Edge Functions → Secrets).
+              Les clés sont vérifiées auprès de Stripe puis enregistrées chiffrées ; elles ne sont jamais réaffichées ni envoyées à l’application mobile.
             </p>
           </section>
           <section className="card grid" style={{ gap: 14 }}>
@@ -76,7 +78,8 @@ export default function StripePage() {
             </p>
             <Link href="/settings" className="btn btn-ghost">Modifier le pourcentage</Link>
             <h2 style={{ margin: '8px 0 0' }}>Autres moyens</h2>
-            <Check ok={cfg.data.paypal.configured} label={`PayPal (${cfg.data.paypal.mode})`} hint={cfg.data.paypal.configured ? undefined : 'Clés PayPal non configurées.'} />
+            <Check ok={cfg.data.paypal.configured} label={`PayPal (${cfg.data.paypal.mode === 'live' ? 'réel' : 'test'})`} hint={cfg.data.paypal.keyHint ? `Client ID ${cfg.data.paypal.keyHint}` : 'Clés PayPal non configurées.'} />
+            <KeysForm provider="paypal" configured={cfg.data.paypal.source === 'admin'} locked={cfg.data.paypal.source === 'env'} onDone={cfg.reload} webhookUrl={cfg.data.paypal.webhookUrl} />
             <Check ok={cfg.data.mobileMoney.provider !== 'fake'} label="Mobile Money" hint={cfg.data.mobileMoney.provider === 'fake' ? 'Simulation (contrats opérateurs à signer).' : undefined} />
           </section>
         </div>
@@ -113,5 +116,77 @@ export default function StripePage() {
         )}
       </section>
     </>
+  );
+}
+
+/** Saisie des clés par l'administrateur, quand il le souhaite : vérifiées, chiffrées, jamais réaffichées. */
+function KeysForm({ provider, configured, locked, onDone, webhookUrl }: { provider: 'stripe' | 'paypal'; configured: boolean; locked: boolean; onDone: () => void; webhookUrl?: string }) {
+  const { toast, confirm } = useUi();
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState({ secretKey: '', webhookSecret: '', clientId: '', clientSecret: '', webhookId: '', mode: 'sandbox' });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+
+  if (locked) return <p className="muted" style={{ margin: 0, fontSize: 13 }}>Clés définies dans les secrets du serveur : elles priment sur la saisie ici.</p>;
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setErr(null);
+    try {
+      await api('admin/payment-keys', { method: 'POST', json: provider === 'stripe' ? { provider, secretKey: f.secretKey, webhookSecret: f.webhookSecret } : { provider, clientId: f.clientId, clientSecret: f.clientSecret, webhookId: f.webhookId, mode: f.mode } });
+      setF({ secretKey: '', webhookSecret: '', clientId: '', clientSecret: '', webhookId: '', mode: 'sandbox' });
+      setOpen(false);
+      toast(provider === 'stripe' ? 'Clés Stripe enregistrées' : 'Identifiants PayPal enregistrés');
+      onDone();
+    } catch (x) {
+      setErr(x instanceof Error ? x.message : 'Enregistrement impossible.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const clear = async () => {
+    if (!(await confirm({ title: provider === 'stripe' ? 'Retirer les clés Stripe ?' : 'Retirer les identifiants PayPal ?', body: provider === 'stripe' ? 'Le paiement par carte repassera en simulation.' : 'PayPal ne sera plus proposé.', confirm: 'Retirer', danger: true }))) return;
+    await api('admin/payment-keys', { method: 'DELETE', json: { provider } });
+    toast('Clés retirées');
+    onDone();
+  };
+
+  if (!open) {
+    return (
+      <div className="row" style={{ gap: 8 }}>
+        <button className="btn btn-acc" onClick={() => setOpen(true)}>{configured ? 'Remplacer les clés' : provider === 'stripe' ? 'Saisir mes clés Stripe' : 'Saisir mes identifiants PayPal'}</button>
+        {configured && <button className="btn btn-danger" onClick={clear}>Retirer</button>}
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={save} className="grid" style={{ gap: 10, padding: 14, border: '1px solid var(--border)', borderRadius: 14 }} autoComplete="off">
+      {provider === 'stripe' ? (
+        <>
+          <div className="field"><label htmlFor="sk">Clé secrète (sk_test_… ou sk_live_…)</label><input id="sk" className="input" type="password" value={f.secretKey} onChange={set('secretKey')} required /></div>
+          <div className="field"><label htmlFor="wh">Secret du webhook (whsec_…)</label><input id="wh" className="input" type="password" value={f.webhookSecret} onChange={set('webhookSecret')} required /></div>
+        </>
+      ) : (
+        <>
+          <div className="field">
+            <label htmlFor="pm">Mode</label>
+            <select id="pm" className="input" value={f.mode} onChange={set('mode')}><option value="sandbox">Test (sandbox)</option><option value="live">Réel</option></select>
+          </div>
+          <div className="field"><label htmlFor="ci">Client ID</label><input id="ci" className="input" type="password" value={f.clientId} onChange={set('clientId')} required /></div>
+          <div className="field"><label htmlFor="cs">Secret</label><input id="cs" className="input" type="password" value={f.clientSecret} onChange={set('clientSecret')} required /></div>
+          <div className="field">
+            <label htmlFor="wi">Webhook ID (facultatif)</label><input id="wi" className="input" value={f.webhookId} onChange={set('webhookId')} />
+            {webhookUrl && <span className="hint">Adresse du webhook à déclarer chez PayPal : {webhookUrl}</span>}
+          </div>
+        </>
+      )}
+      {err && <div className="alert alert-ko" role="alert">{err}</div>}
+      <div className="row" style={{ gap: 8 }}>
+        <button className="btn btn-acc" disabled={busy}>{busy ? 'Vérification…' : 'Vérifier et enregistrer'}</button>
+        <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>Annuler</button>
+      </div>
+    </form>
   );
 }

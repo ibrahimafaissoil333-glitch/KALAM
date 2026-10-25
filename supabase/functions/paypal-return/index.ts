@@ -10,7 +10,7 @@ Deno.serve(handler(async (req) => {
   const db = serviceClient();
   const { data: pay } = await db.from('payments').select('provider, provider_session_id, return_url').eq('order_id', orderId).eq('method', 'PAYPAL')
     .order('created_at', { ascending: false }).limit(1).maybeSingle();
-  const pp = paypalProvider();
+  const pp = await paypalProvider();
   if (pay && result === 'success' && pp instanceof PayPalProvider) {
     try {
       const c = await pp.capture(pay.provider_session_id);
