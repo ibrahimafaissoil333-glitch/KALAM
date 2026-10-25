@@ -1,6 +1,6 @@
 // Actions d'administration qui sortent de la base : remboursement (prestataire), envoi de fichiers,
 // suppression avec nettoyage du stockage, anonymisation RGPD, affichage d'un IBAN, vidéos du carrousel.
-import { check, handler, HttpError, json, serviceClient, userFromRequest } from '../_shared/http.ts';
+import { check, env, handler, HttpError, json, serviceClient, userFromRequest } from '../_shared/http.ts';
 import { decryptSecret } from '../_shared/crypto.ts';
 import { removeStoredFiles, uploadBookFile } from '../_shared/files.ts';
 import { paypalProvider, provider } from '../_shared/payments.ts';
@@ -56,6 +56,24 @@ Deno.serve(handler(async (req) => {
       const files = check(await client.rpc('admin_delete_ebook', { p_id: body.id })) as { path: string; kind: string }[];
       await removeStoredFiles(files);
       return json({ deleted: true });
+    }
+    case 'payments-config': {
+      // État de la configuration des paiements de la plateforme (aucune clé n'est renvoyée).
+      const key = env('STRIPE_SECRET_KEY');
+      const base = `${env('PUBLIC_SUPABASE_URL', env('SUPABASE_URL'))}/functions/v1/payment-webhook`;
+      return json({
+        card: {
+          provider: env('PAYMENT_PROVIDER', 'fake') === 'stripe' ? 'stripe' : 'fake',
+          keyConfigured: !!key,
+          mode: key.startsWith('sk_live_') || key.startsWith('rk_live_') ? 'live' : key ? 'test' : null,
+          webhookConfigured: !!env('STRIPE_WEBHOOK_SECRET'),
+          automaticTax: env('STRIPE_AUTOMATIC_TAX') === 'true',
+          webhookUrl: base,
+          events: ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.async_payment_failed', 'checkout.session.expired', 'charge.refunded'],
+        },
+        paypal: { configured: !!env('PAYPAL_CLIENT_ID') && !!env('PAYPAL_CLIENT_SECRET'), mode: env('PAYPAL_MODE', 'sandbox'), webhookUrl: `${base}?provider=paypal` },
+        mobileMoney: { provider: env('MOBILE_MONEY_PROVIDER', 'fake') },
+      });
     }
     case 'reveal-payout-account': {
       // Coordonnées en clair pour effectuer un virement : admin seulement, chaque affichage est journalisé.

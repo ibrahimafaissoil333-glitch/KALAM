@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
-import type { SellerEbook } from '@/lib/api';
+import type { PayoutAccount, SellerEbook } from '@/lib/api';
 import { money, shortDate } from '@/lib/format';
+import { useStore } from '@/lib/store';
 import { useQuery } from '@/lib/use-query';
-import { Button, Card, Cover, Divider, EmptyState, ErrorBanner, KindBadge, RowLink, ScreenHeader, Skeleton, T } from '@/ui/components';
+import { Button, Card, Cover, Divider, EmptyState, ErrorBanner, InfoNote, KindBadge, RowLink, ScreenHeader, Skeleton, T } from '@/ui/components';
 import { color, gutter } from '@/ui/theme';
 
 interface Dashboard {
@@ -25,6 +26,9 @@ const listingStatus = (): Record<SellerEbook['status'], [string, string, string]
 export default function SellerHome() {
   const { data: d, error, reload } = useQuery<Dashboard>('seller/dashboard');
   const { data: listings } = useQuery<SellerEbook[]>('seller/ebooks');
+  const { config } = useStore();
+  const { data: accounts } = useQuery<PayoutAccount[]>('me/payout-accounts');
+  const pct = config?.commissionPercent ?? 2;
 
   const stat = (label: string, value: number | string) => (
     <Card style={{ flex: 1, padding: 14, borderRadius: 14 }}>
@@ -38,6 +42,12 @@ export default function SellerHome() {
       <ScreenHeader back title="Espace vendeur" sub="Vendez vos livres papier ou numériques à toute la communauté." />
       <View style={{ paddingHorizontal: gutter, gap: 16 }}>
         {error && <ErrorBanner message={error} onRetry={reload} />}
+        {accounts && accounts.length === 0 && (
+          <Card style={{ padding: 16, gap: 10 }}>
+            <InfoNote icon="wallet" tone="accent">Pour vendre, ajoutez d’abord où recevoir votre argent : compte bancaire, PayPal ou Mobile Money.</InfoNote>
+            <Button label="Ajouter mes coordonnées de paiement" icon="wallet" small onPress={() => router.push('/seller/payout')} />
+          </Card>
+        )}
         <Button label="Mettre un livre en vente" variant="accent" icon="plus" onPress={() => router.push('/seller/edit')} />
 
         {!d ? <Skeleton h={160} /> : (
@@ -49,8 +59,9 @@ export default function SellerHome() {
             </View>
             <Card style={{ padding: 16, gap: 10 }}>
               <T weight="bold" style={{ fontSize: 17 }}>Mes gains</T>
+              <T muted style={{ fontSize: 13 }}>Commission Kalam : {pct} % du prix de chaque livre vendu (la livraison vous revient en entier).</T>
               {d.earnings.length === 0 ? (
-                <T muted style={{ fontSize: 14 }}>Vos gains apparaîtront ici après votre première vente (commission Kalam déduite).</T>
+                <T muted style={{ fontSize: 14 }}>Vos gains apparaîtront ici après votre première vente (commission Kalam de {pct} % déduite).</T>
               ) : d.earnings.map((g) => (
                 <View key={g.currency} style={{ gap: 4 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

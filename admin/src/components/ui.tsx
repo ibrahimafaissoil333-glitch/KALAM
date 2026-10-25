@@ -15,6 +15,7 @@ const NAV = [
   ['/users', 'Utilisateurs'],
   ['/stats', 'Statistiques'],
   ['/promos', 'Carrousel'],
+  ['/stripe', 'Stripe'],
   ['/payments', 'Mobile Money'],
   ['/payouts', 'Versements'],
   ['/settings', 'Paramètres'],

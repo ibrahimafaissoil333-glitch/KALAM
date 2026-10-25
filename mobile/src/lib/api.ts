@@ -348,4 +348,6 @@ export interface PublicConfig {
   legal: { terms: string | null; salesTerms: string | null; privacy: string | null; legalNotice: string | null };
   mobileMoney?: { enabled: boolean; countries: MobileMoneyCountry[] };
   paypal?: { enabled: boolean; currencies: string[] };
+  /** Commission prélevée par Kalam sur chaque vente (prix du livre, hors livraison). */
+  commissionPercent?: number;
 }

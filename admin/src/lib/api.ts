@@ -80,6 +80,9 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   // Mobile Money : interrupteurs (réglage en base, sans redéploiement) et historique
   if (p === 'admin/mobile-money') return method === 'PUT' ? rpc('admin_set_mobile_money', { p: b }) : rpc('admin_get_mobile_money');
   if (p === 'admin/mobile-money/log') return rpc('admin_mobile_money_log');
+  // Paiements de la plateforme : configuration (sans clés) et revenus de l'administrateur
+  if (p === 'admin/payments-config') return adminFn({ action: 'payments-config' });
+  if (p === 'admin/revenue') return rpc('admin_platform_revenue');
   // Vendeurs : ventes et modération des annonces
   if (p === 'admin/sellers') return rpc('admin_sellers', { p_q: opt('q') });
   if ((m = p.match(/^admin\/sellers\/([^/]+)$/))) return rpc('admin_seller', { p_id: m[1] });

@@ -23,6 +23,11 @@ export interface WebhookEvent {
 }
 export class InvalidSignature extends Error {}
 
+// Devises sans centimes chez Stripe (dont KMF et MGA) : nos montants sont toujours stockés ×100.
+const ZERO_DECIMAL = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
+export const toStripeAmount = (cents: number, currency: string) => (ZERO_DECIMAL.includes(currency.toUpperCase()) ? Math.round(cents / 100) : cents);
+export const fromStripeAmount = (amount: number, currency: string) => (ZERO_DECIMAL.includes(currency.toUpperCase()) ? amount * 100 : amount);
+
 export interface PaymentProvider {
   name: string;
   createSession(req: CheckoutRequest): Promise<{ sessionId: string; url: string }>;
@@ -90,7 +95,7 @@ export class StripeProvider implements PaymentProvider {
         client_reference_id: r.orderId,
         metadata: { orderId: r.orderId, reference: r.reference },
         payment_intent_data: { metadata: { orderId: r.orderId } },
-        line_items: r.items.map((i) => ({ quantity: 1, price_data: { currency: r.currency.toLowerCase(), unit_amount: i.priceCents, product_data: { name: i.title } } })),
+        line_items: r.items.map((i) => ({ quantity: 1, price_data: { currency: r.currency.toLowerCase(), unit_amount: toStripeAmount(i.priceCents, r.currency), product_data: { name: i.title } } })),
         automatic_tax: { enabled: env('STRIPE_AUTOMATIC_TAX') === 'true' },
         success_url: `${r.returnUrl}${sep}order=${r.orderId}&result=success`,
         cancel_url: `${r.returnUrl}${sep}order=${r.orderId}&result=cancel`,
@@ -115,7 +120,7 @@ export class StripeProvider implements PaymentProvider {
         return {
           ...base, outcome: 'succeeded', sessionId: s.id,
           paymentId: typeof s.payment_intent === 'string' ? s.payment_intent : s.payment_intent?.id,
-          taxCents: s.total_details?.amount_tax ?? undefined, taxCountry: s.customer_details?.address?.country ?? undefined,
+          taxCents: s.total_details?.amount_tax == null ? undefined : fromStripeAmount(s.total_details.amount_tax, s.currency ?? 'EUR'), taxCountry: s.customer_details?.address?.country ?? undefined,
         };
       }
       case 'checkout.session.async_payment_failed':

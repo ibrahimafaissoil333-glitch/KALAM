@@ -29,6 +29,10 @@ describe('Marketplace, Mobile Money et reversements', () => {
       if (r.error) throw r.error;
     }
     if (publish) {
+      // Moyen de réception requis pour vendre (ajouté directement s'il manque).
+      await env.sql.query(`insert into public.seller_payout_accounts (user_id, kind, country, operator, holder_name, secret_ciphertext, last4, is_default)
+        select $1, 'MOBILE_MONEY', 'KM', 'HURI_MONEY', 'Test', 'v1:test:test', '0000', false
+        where not exists (select 1 from public.seller_payout_accounts where user_id = $1)`, [seller.id]);
       const r = await seller.c.rpc('seller_set_status', { p_id: e.id, p_action: 'publish' });
       if (r.error) throw r.error;
     }
@@ -68,6 +72,16 @@ describe('Marketplace, Mobile Money et reversements', () => {
     await seller.c.rpc('seller_set_status', { p_id: e.id, p_action: 'pause' });
     assert.equal((await anon().rpc('search_ebooks', {})).data.total, 0, 'une annonce en pause est masquée');
     assert.equal((await seller.c.rpc('seller_dashboard')).data.listings.paused, 1);
+  });
+
+  it('mise en vente refusée tant que le vendeur n’a pas de coordonnées de paiement', async () => {
+    const seller = await env.register('Vendeur');
+    const e = await listing(seller, { publish: false });
+    const err = await rpcError(seller.c.rpc('seller_set_status', { p_id: e.id, p_action: 'publish' }));
+    assert.equal(err.code, 'PT409');
+    assert.match(err.message, /coordonnées de paiement/);
+    await env.fn('payout-accounts', { token: seller.token, body: { kind: 'PAYPAL', holderName: 'V', country: 'FR', email: 'vendeur@example.com' } });
+    assert.equal((await seller.c.rpc('seller_set_status', { p_id: e.id, p_action: 'publish' })).data.status, 'PUBLISHED');
   });
 
   it('livre physique : état, stock et livraison obligatoires ; pas de fichier', async () => {

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
 import { api, BookCondition, errorMessage, ProductKind, SellerEbook, ShippingMode, uploadSellerFile } from '@/lib/api';
 import { centsToInput, CONDITION_LABEL, CURRENCIES, LANGUAGES, parseMoney, SHIPPING_LABEL } from '@/lib/format';
+import { useStore } from '@/lib/store';
 import { Button, Card, Choice, ErrorBanner, InfoNote, KindBadge, ScreenHeader, Skeleton, Switch, T, TextField, useToast } from '@/ui/components';
 import { Icon } from '@/ui/icons';
 import { color, gutter } from '@/ui/theme';
@@ -30,6 +31,8 @@ const emptyShipping = (): Record<ShippingMode, ShipForm> => ({
 export default function SellerEdit() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const toast = useToast();
+  const { config } = useStore();
+  const pct = config?.commissionPercent ?? 2;
   const [book, setBook] = useState<SellerEbook | null>(null);
   const [loading, setLoading] = useState(!!id);
   const [kind, setKind] = useState<ProductKind | null>(null);
@@ -214,7 +217,7 @@ export default function SellerEdit() {
               </View>
             </View>
             <Choice label="Devise" value={f.currency} options={CURRENCIES.map((c) => [c, c] as const)} onChange={set('currency')} />
-            <InfoNote>Mobile Money est proposé aux acheteurs pour les prix en KMF (Comores) et en MGA (Madagascar). Une commission de la plateforme est déduite de vos gains.</InfoNote>
+            <InfoNote>Mobile Money est proposé aux acheteurs pour les prix en KMF (Comores) et en MGA (Madagascar). Kalam prélève une commission de {pct} % sur le prix de chaque vente ; le reste vous est versé.</InfoNote>
 
             <T weight="bold" style={{ fontSize: 17, marginTop: 4 }}>Couverture</T>
             <Pressable onPress={pickCover} accessibilityRole="button" accessibilityLabel="Choisir une image de couverture" style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 14, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.borderStrong, backgroundColor: color.surface }}>
@@ -261,6 +264,9 @@ export default function SellerEdit() {
           </>
         )}
         {error && <ErrorBanner message={error} />}
+        {error?.includes('coordonnées de paiement') && (
+          <Button label="Ajouter mes coordonnées de paiement" icon="wallet" onPress={() => router.push('/seller/payout')} />
+        )}
       </ScrollView>
 
       {kind && (
